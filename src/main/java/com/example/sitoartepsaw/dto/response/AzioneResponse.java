@@ -1,0 +1,19 @@
+package com.example.sitoartepsaw.dto.response;
+
+import com.example.sitoartepsaw.enums.MetodoPagamento;
+import com.example.sitoartepsaw.enums.TipoAzione;
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class AzioneResponse {
+    private Integer id;
+    private LocalDateTime data;
+    private TipoAzione tipoAzione;
+    private BigDecimal prezzoAlMomento;
+    private MetodoPagamento metodoPagamento;
+    private Boolean annullata;
+    private String titoloOggetto;
+    private String emailUtente;
+}
