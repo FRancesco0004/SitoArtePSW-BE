@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS azioni (
     data DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tipo_azione ENUM('COMPRA', 'VENDE') NOT NULL,
     prezzo_al_momento DECIMAL(10, 2) NOT NULL,
-    metodo_pagamento ENUM('CARTA', 'PAYPAL', 'BONIFICO') NOT NULL,
+    metodo_pagamento ENUM('PAYPAL', 'BONIFICO', 'P2P', 'REVOLUT') NOT NULL,
     annullata BOOLEAN NOT NULL DEFAULT FALSE,
     utente_id INT NOT NULL,
     oggetto_id INT NOT NULL,
