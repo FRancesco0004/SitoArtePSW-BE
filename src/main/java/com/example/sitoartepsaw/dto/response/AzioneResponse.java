@@ -6,6 +6,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+// Azione Response l'ho creato per lo storico degli acquisti
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class AzioneResponse {
     private Integer id;
