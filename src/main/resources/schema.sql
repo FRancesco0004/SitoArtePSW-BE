@@ -1,13 +1,3 @@
-SET FOREIGN_KEY_CHECKS = 0;
-
-DROP TABLE IF EXISTS azioni;
-DROP TABLE IF EXISTS oggetti;
-DROP TABLE IF EXISTS autori;
-DROP TABLE IF EXISTS utenti_verificati;
-DROP TABLE IF EXISTS utenti;
-
-SET FOREIGN_KEY_CHECKS = 1;
-
 CREATE TABLE IF NOT EXISTS utenti (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -19,7 +9,8 @@ CREATE TABLE IF NOT EXISTS utenti (
 CREATE TABLE IF NOT EXISTS utenti_verificati (
     utente_id INT PRIMARY KEY,
     titolo VARCHAR(150),
-    CONSTRAINT fk_verificato_utente FOREIGN KEY (utente_id) REFERENCES utenti(id) ON DELETE CASCADE
+    CONSTRAINT fk_verificato_utente FOREIGN KEY (utente_id)
+        REFERENCES utenti(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS autori (
@@ -27,7 +18,8 @@ CREATE TABLE IF NOT EXISTS autori (
     nome VARCHAR(100) NOT NULL,
     cognome VARCHAR(100) NOT NULL,
     utente_verificato_id INT UNIQUE,
-    CONSTRAINT fk_autore_verificato FOREIGN KEY (utente_verificato_id) REFERENCES utenti_verificati(utente_id) ON DELETE SET NULL
+    CONSTRAINT fk_autore_verificato FOREIGN KEY (utente_verificato_id)
+        REFERENCES utenti_verificati(utente_id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS oggetti (
@@ -42,7 +34,9 @@ CREATE TABLE IF NOT EXISTS oggetti (
     peso DECIMAL(10, 2),
     stato ENUM('DISPONIBILE', 'IN_VALUTAZIONE', 'VENDUTO') NOT NULL DEFAULT 'DISPONIBILE',
     autore_id INT,
-    CONSTRAINT fk_oggetto_autore FOREIGN KEY (autore_id) REFERENCES autori(id) ON DELETE SET NULL
+    CONSTRAINT fk_oggetto_autore FOREIGN KEY (autore_id)
+        REFERENCES autori(id) ON DELETE SET NULL,
+    INDEX idx_oggetti_autore (autore_id)
 );
 
 CREATE TABLE IF NOT EXISTS azioni (
@@ -54,10 +48,10 @@ CREATE TABLE IF NOT EXISTS azioni (
     annullata BOOLEAN NOT NULL DEFAULT FALSE,
     utente_id INT NOT NULL,
     oggetto_id INT NOT NULL,
-    CONSTRAINT fk_azione_utente FOREIGN KEY (utente_id) REFERENCES utenti(id) ON DELETE CASCADE,
-    CONSTRAINT fk_azione_oggetto FOREIGN KEY (oggetto_id) REFERENCES oggetti(id) ON DELETE CASCADE
+    CONSTRAINT fk_azione_utente FOREIGN KEY (utente_id)
+        REFERENCES utenti(id) ON DELETE CASCADE,
+    CONSTRAINT fk_azione_oggetto FOREIGN KEY (oggetto_id)
+        REFERENCES oggetti(id) ON DELETE CASCADE,
+    INDEX idx_azioni_utente (utente_id),
+    INDEX idx_azioni_oggetto (oggetto_id)
 );
-
-CREATE INDEX idx_azioni_utente  ON azioni(utente_id);
-CREATE INDEX idx_azioni_oggetto ON azioni(oggetto_id);
-CREATE INDEX idx_oggetti_autore ON oggetti(autore_id);
