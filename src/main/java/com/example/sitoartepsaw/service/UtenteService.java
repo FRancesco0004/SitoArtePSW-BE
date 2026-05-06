@@ -25,12 +25,17 @@ public class UtenteService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
+    // Concentro la comunicazione con la repository in questo punto
+
+    public boolean existsByEmail(String email) {
+        return utenteRepository.existsByEmail(email);
+    }
 
     @Transactional
-    public UtenteResponse registra(RegistrazioneRequest request) {
+    public UtenteResponse registraUtente(RegistrazioneRequest request) {
 
         // Controlliamo se l'email è già in uso
-        if (utenteRepository.existsByEmail(request.getEmail())) {
+        if (existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email già in uso: " + request.getEmail());
         }
 
@@ -45,7 +50,7 @@ public class UtenteService {
         return utenteMapper.toResponse(salvato);
     }
 
-    public String login(LoginRequest request) {
+    public String loginUtente(LoginRequest request) {
 
         // Autentichiamo l'utente, la classe UsernamePasswordAuthenticationToken è solo un
         // modulo da compilare da mandare poi all'authenticationManager nella classe
@@ -63,13 +68,20 @@ public class UtenteService {
         return jwtTokenProvider.generateToken(utente);
     }
 
-
-    public UtenteResponse getProfilo(String email) {
+    public UtenteResponse getProfiloUtente(String email) {
         Utente utente = utenteRepository
                 .findByEmail(email)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+                .orElseThrow(() -> new RuntimeException("Utente non trovato dalla mail"));
+
+        return utenteMapper.toResponse(utente);
+    }
+
+    public UtenteResponse getUtenteById(Integer id){
+        Utente utente = utenteRepository
+                .findById(id)
+                .orElseThrow( () -> new RuntimeException("Nessun utente associato all'ID "));
 
         return utenteMapper.toResponse(utente);
     }

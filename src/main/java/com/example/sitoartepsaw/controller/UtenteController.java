@@ -23,21 +23,21 @@ public class UtenteController {
     // La notazione @RequestBody mi serve per il JSON dalla richiesta HTTP
     @PostMapping("/registra")
     public ResponseEntity<UtenteResponse> registra(@Valid @RequestBody RegistrazioneRequest request) {
-        UtenteResponse response = utenteService.registra(request);
+        UtenteResponse response = utenteService.registraUtente(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // La notazione @Valid attiva le validazioni specificate nel LoginRequest nei DTO
     @PostMapping("/login")
     public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
-        String token = utenteService.login(request);
+        String token = utenteService.loginUtente(request);
         return ResponseEntity.ok(token);
     }
 
     @GetMapping("/profilo")
     public ResponseEntity<UtenteResponse> getProfilo(@AuthenticationPrincipal UserDetails userDetails) {
 
-        UtenteResponse response = utenteService.getProfilo(userDetails.getUsername());
+        UtenteResponse response = utenteService.getProfiloUtente(userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
 }
