@@ -58,25 +58,6 @@ CREATE TABLE IF NOT EXISTS azioni (
     CONSTRAINT fk_azione_oggetto FOREIGN KEY (oggetto_id) REFERENCES oggetti(id) ON DELETE CASCADE
 );
 
-DROP TRIGGER IF EXISTS check_vende_solo_verificato;
-
-DELIMITER $$
-CREATE TRIGGER check_vende_solo_verificato
-    BEFORE INSERT ON azioni
-    FOR EACH ROW
-BEGIN
-    IF NEW.tipo_azione = 'VENDE' THEN
-        IF NOT EXISTS (
-            SELECT 1 FROM utenti_verificati
-            WHERE utente_id = NEW.utente_id
-        ) THEN
-            SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT = 'Solo un utente verificato può vendere un oggetto';
-        END IF;
-    END IF;
-END$$
-DELIMITER ;
-
 CREATE INDEX idx_azioni_utente  ON azioni(utente_id);
 CREATE INDEX idx_azioni_oggetto ON azioni(oggetto_id);
 CREATE INDEX idx_oggetti_autore ON oggetti(autore_id);
