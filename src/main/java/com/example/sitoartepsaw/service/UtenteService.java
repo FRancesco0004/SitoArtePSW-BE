@@ -62,6 +62,7 @@ public class UtenteService {
                 )
         );
 
+        // Da Authentication prendi l'utente
         Utente utente = (Utente) authentication.getPrincipal();
 
         // restituiamo il token

@@ -20,13 +20,15 @@ public class AzioneController {
 
     private final AzioneService azioneService;
 
+//    private final AcquistoFacade acquistoFacade;
+
 //    @PostMapping("/compra/{oggettoId}")
 //    public ResponseEntity<AzioneResponse> compra(
 //            @PathVariable Integer oggettoId,
 //            @Valid @RequestBody AcquistoRequest request,
 //            @AuthenticationPrincipal Utente utente) {
 //
-//        AzioneResponse response = azioneService.compra(oggettoId, request, utente);
+//        AzioneResponse response = azioneFacade.compra(oggettoId, request, utente);
 //        return ResponseEntity.status(HttpStatus.CREATED).body(response);
 //    }
 //
@@ -37,7 +39,7 @@ public class AzioneController {
 //            @Valid @RequestBody AcquistoRequest request,
 //            @AuthenticationPrincipal Utente utente) {
 //
-//        AzioneResponse response = azioneService.vendi(oggettoId, request, utente);
+//        AzioneResponse response = azioneFacade.vendi(oggettoId, request, utente);
 //        return ResponseEntity.status(HttpStatus.CREATED).body(response);
 //    }
 

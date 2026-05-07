@@ -42,7 +42,7 @@ Per tenere il codice pulito, scalabile ed evolvibile abbiamo adottato alcuni Des
 
 ### Come gestiamo i comportamenti
 
-**Strategy** — Al checkout, l'utente può pagare con carta, PayPal o bonifico; ogni metodo è una strategia intercambiabile.
+**Template Methody** — Al checkout, l'utente può pagare con carta, PayPal o bonifico; i metodi nelle classi sono gli stessi, cambia solo l' API del servizio.
 
 **State** — Le opere hanno una vita: nascono `DISPONIBILE`, passano per `IN_VALUTAZIONE` quando qualcuno sta tentando l'acquisto, e arrivano a `VENDUTO`.
 
