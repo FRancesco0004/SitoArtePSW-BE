@@ -50,7 +50,6 @@ public class SecurityConfiguration {
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(STATELESS)
                 )
-                // Ora la chiamata non dà più errore
                 .authenticationProvider(authenticationProvider());
 
         return http.build();
