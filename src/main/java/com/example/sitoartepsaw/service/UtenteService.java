@@ -50,6 +50,7 @@ public class UtenteService {
         return utenteMapper.toResponse(salvato);
     }
 
+    @Transactional(readOnly = true) // piccola ottimizzazioone con Hibernate
     public String loginUtente(LoginRequest request) {
 
         // Autentichiamo l'utente, la classe UsernamePasswordAuthenticationToken è solo un
