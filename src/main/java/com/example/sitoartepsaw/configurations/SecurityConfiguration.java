@@ -1,4 +1,4 @@
-package com.example.sitoartepsaw.configutations;
+package com.example.sitoartepsaw.configurations;
 
 import com.example.sitoartepsaw.support.authentication.UserDetailsServiceImpl;
 import com.example.sitoartepsaw.support.authentication.JwtAuthenticationConverter;
