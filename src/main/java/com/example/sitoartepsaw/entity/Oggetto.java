@@ -4,11 +4,15 @@ import com.example.sitoartepsaw.enums.StatoOggetto;
 import com.example.sitoartepsaw.enums.TipoOpera;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.NaturalId;
+
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "oggetti")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder @EqualsAndHashCode @ToString
+@DynamicUpdate
 public class Oggetto {
 
     @Id
@@ -17,6 +21,7 @@ public class Oggetto {
     private Integer id;
 
     @Basic
+    @NaturalId
     @Column(name = "titolo", nullable = false, length = 255)
     private String titolo;
 

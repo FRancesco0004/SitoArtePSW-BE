@@ -9,5 +9,4 @@ import java.util.List;
 @Repository
 public interface UtenteVerificatoRepository extends JpaRepository<UtenteVerificato, Integer> {
     List<UtenteVerificato> findByTitolo(String titolo);
-    boolean existsByUtenteId(Integer utenteId);
 }
