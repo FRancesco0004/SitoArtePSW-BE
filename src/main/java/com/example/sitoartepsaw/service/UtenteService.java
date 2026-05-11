@@ -5,6 +5,8 @@ import com.example.sitoartepsaw.dto.response.UtenteResponse;
 import com.example.sitoartepsaw.entity.Utente;
 import com.example.sitoartepsaw.mapper.UtenteMapper;
 import com.example.sitoartepsaw.repository.UtenteRepository;
+import com.example.sitoartepsaw.support.exceptions.ConflictException;
+import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -40,19 +42,21 @@ public class UtenteService {
     @Transactional
     public UtenteResponse registraUtente(RegistrazioneRequest request) {
 
-        if (utenteRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email già in uso: " + request.getEmail());
+        if (existsByEmail(request.getEmail())) {
+            throw new ConflictException("Email già in uso: " + request.getEmail());
         }
 
         // Crea utente su Keycloak via REST API
         creaUtenteKeycloak(request);
 
-        // Salva nel tuo DB (senza password)
+        // Salva nel DB senza password — la gestisce Keycloak
         Utente utente = utenteMapper.toEntity(request);
         Utente salvato = utenteRepository.save(utente);
 
         return utenteMapper.toResponse(salvato);
     }
+
+    // Login rimosso — lo gestisce direttamente Keycloak
 
     @Transactional(readOnly = true)
     public UtenteResponse getProfiloUtente(String email) {
@@ -60,7 +64,9 @@ public class UtenteService {
                 .findByEmail(email)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Utente non trovato dalla mail"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utente con email " + email + " non trovato"
+                ));
         return utenteMapper.toResponse(utente);
     }
 
@@ -68,7 +74,9 @@ public class UtenteService {
     public UtenteResponse getUtenteById(Integer id) {
         Utente utente = utenteRepository
                 .findById(id)
-                .orElseThrow(() -> new RuntimeException("Nessun utente associato all'ID"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utente con id " + id + " non trovato"
+                ));
         return utenteMapper.toResponse(utente);
     }
 
@@ -85,9 +93,9 @@ public class UtenteService {
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .POST(HttpRequest.BodyPublishers.ofString(
                             "client_id=admin-cli" +
-                                    "&username=" + adminUsername+
-                                    "&password=" + adminPassword+
-                                    "&grant_type=password"
+                            "&username=" + adminUsername +
+                            "&password=" + adminPassword +
+                            "&grant_type=password"
                     ))
                     .build();
 
@@ -96,7 +104,6 @@ public class UtenteService {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            // Estrae access_token dalla risposta JSON
             return response.body()
                     .split("\"access_token\":\"")[1]
                     .split("\"")[0];

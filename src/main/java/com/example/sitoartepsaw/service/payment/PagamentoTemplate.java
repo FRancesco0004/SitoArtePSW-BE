@@ -1,6 +1,7 @@
 package com.example.sitoartepsaw.service.payment;
 
 import com.example.sitoartepsaw.entity.Utente;
+import com.example.sitoartepsaw.support.exceptions.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
@@ -20,7 +21,7 @@ public abstract class PagamentoTemplate {
 
     private void validaImporto(BigDecimal importo) {
         if (importo == null || importo.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Importo non valido");
+            throw new BadRequestException("Importo non valido");
         }
     }
 
