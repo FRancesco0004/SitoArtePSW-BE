@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(exclude = "utenteVerificato")
 @ToString(exclude = "utenteVerificato")
-public class Utente implements UserDetails{
+public class Utente{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,10 +38,6 @@ public class Utente implements UserDetails{
     @Column(name = "email", unique = true, nullable = false, length = 255)
     private String email;
 
-    @Basic
-    @Column(name = "password", nullable = false)
-    private String password;
-
     // Con mappedBy evitiamo una query separata sulla tabella utenti_verificati
     // perché navighiamo direttamente la relazione JPA già caricata in memoria.
     // FetchType.LAZY garantisce che UtenteVerificato venga caricato
@@ -50,25 +46,19 @@ public class Utente implements UserDetails{
     @OneToOne(mappedBy = "utente", fetch = FetchType.LAZY)
     private UtenteVerificato utenteVerificato;
 
-    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
-    @Override
     public String getUsername() {
         return email;
     }
 
-    @Override
     public boolean isAccountNonExpired() { return true; }
 
-    @Override
     public boolean isAccountNonLocked() { return true; }
 
-    @Override
     public boolean isCredentialsNonExpired() { return true; }
 
-    @Override
     public boolean isEnabled() { return true; }
 }
