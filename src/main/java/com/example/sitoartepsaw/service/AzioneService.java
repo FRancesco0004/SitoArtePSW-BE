@@ -14,8 +14,11 @@ import com.example.sitoartepsaw.support.exceptions.UnauthorizedActionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.sitoartepsaw.dto.request.AcquistoRequest;
+import com.example.sitoartepsaw.entity.Utente;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +68,26 @@ public class AzioneService {
 
         azione.setAnnullata(true);
         Azione salvata = azioneRepository.save(azione);
+        return azioneMapper.toResponse(salvata);
+    }
+
+    public AzioneResponse creaAzioneAcquisto(
+            Oggetto oggetto,
+            AcquistoRequest request,
+            Utente utente
+    ) {
+        Azione azione = Azione.builder()
+                .data(LocalDateTime.now())
+                .tipoAzione(TipoAzione.COMPRA)
+                .prezzoAlMomento(oggetto.getCosto())
+                .metodoPagamento(request.getMetodoPagamento())
+                .annullata(false)
+                .utente(utente)
+                .oggetto(oggetto)
+                .build();
+
+        Azione salvata = azioneRepository.save(azione);
+
         return azioneMapper.toResponse(salvata);
     }
 }

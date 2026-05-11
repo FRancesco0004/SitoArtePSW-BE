@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
+import java.util.Optional;
 
 import java.util.List;
 
@@ -23,4 +25,9 @@ public interface OggettoRepository extends JpaRepository<Oggetto, Integer> {
     @Lock(LockModeType.PESSIMISTIC_WRITE) // Ai fini dell'esame va bene ma con tanti utenti crea colli di bottiglia
     @Query("SELECT o FROM Oggetto o WHERE o.stato = 'DISPONIBILE' ORDER BY RAND()")
     List<Oggetto> findAllDisponibiliRandom();
+
+    // Metodo findBy con lock per evitare acquisti simultanei, uso optional per la gestione dei null
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM Oggetto o WHERE o.id = :id")
+    Optional<Oggetto> findByIdForUpdate(@Param("id") Integer id);
 }
