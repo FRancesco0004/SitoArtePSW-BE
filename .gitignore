@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### KeyCloack
+
+keycloak-24.0.4/
+keycloak.tar.gz
