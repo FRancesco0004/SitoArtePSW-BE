@@ -8,6 +8,9 @@ import com.example.sitoartepsaw.enums.TipoAzione;
 import com.example.sitoartepsaw.mapper.AzioneMapper;
 import com.example.sitoartepsaw.repository.AzioneRepository;
 import com.example.sitoartepsaw.repository.OggettoRepository;
+import com.example.sitoartepsaw.support.exceptions.ConflictException;
+import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
+import com.example.sitoartepsaw.support.exceptions.UnauthorizedActionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,10 +35,10 @@ public class AzioneService {
 
     public AzioneResponse getAzione(Integer azioneId, Integer utenteId) {
         Azione azione = azioneRepository.findById(azioneId)
-                .orElseThrow(() -> new RuntimeException("Azione non trovata"));
+                .orElseThrow(() -> new ResourceNotFoundException("Azione non trovata"));
 
         if (!azione.getUtente().getId().equals(utenteId)) {
-            throw new RuntimeException("Non autorizzato");
+            throw new UnauthorizedActionException("Non puoi accedere a questa azione perché appartiene a un altro utente");
         }
 
         return azioneMapper.toResponse(azione);
@@ -44,14 +47,14 @@ public class AzioneService {
     @Transactional
     public AzioneResponse annulla(Integer azioneId, Integer utenteId) {
         Azione azione = azioneRepository.findById(azioneId)
-                .orElseThrow(() -> new RuntimeException("Azione non trovata"));
+                .orElseThrow(() -> new ResourceNotFoundException("Azione non trovata"));
 
         if (!azione.getUtente().getId().equals(utenteId)) {
-            throw new RuntimeException("Non autorizzato");
+            throw new UnauthorizedActionException("Non puoi accedere a questa azione perché appartiene a un altro utente");
         }
 
         if (azione.getAnnullata()) {
-            throw new RuntimeException("Azione già annullata");
+            throw new ConflictException("L'azione con id " + azioneId + " è già stata annullata");
         }
 
         if (azione.getTipoAzione().equals(TipoAzione.COMPRA)) {

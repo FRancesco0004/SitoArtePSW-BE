@@ -14,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.sitoartepsaw.support.exceptions.ConflictException;
+import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +27,6 @@ public class UtenteService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
-    // Concentro la comunicazione con la repository in questo punto
-
     public boolean existsByEmail(String email) {
         return utenteRepository.existsByEmail(email);
     }
@@ -34,28 +34,23 @@ public class UtenteService {
     @Transactional
     public UtenteResponse registraUtente(RegistrazioneRequest request) {
 
-        // Controlliamo se l'email è già in uso
         if (existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email già in uso: " + request.getEmail());
+            throw new ConflictException(
+                    "Email già in uso: " + request.getEmail()
+            );
         }
 
-        // Convertiamo DTO -> Entity
         Utente utente = utenteMapper.toEntity(request);
 
-        // Criptazione delle password
         utente.setPassword(passwordEncoder.encode(request.getPassword()));
         Utente salvato = utenteRepository.save(utente);
 
-        // restituiamo al frontend l'utente registrato
         return utenteMapper.toResponse(salvato);
     }
 
-    @Transactional(readOnly = true) // piccola ottimizzazioone con Hibernate
+    @Transactional(readOnly = true)
     public String loginUtente(LoginRequest request) {
 
-        // Autentichiamo l'utente, la classe UsernamePasswordAuthenticationToken è solo un
-        // modulo da compilare da mandare poi all'authenticationManager nella classe
-        // SecurityConfiguration
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -63,27 +58,31 @@ public class UtenteService {
                 )
         );
 
-        // Da Authentication prendi l'utente
         Utente utente = (Utente) authentication.getPrincipal();
 
-        // restituiamo il token
         return jwtTokenProvider.generateToken(utente);
     }
 
+    @Transactional(readOnly = true)
     public UtenteResponse getProfiloUtente(String email) {
         Utente utente = utenteRepository
                 .findByEmail(email)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Utente non trovato dalla mail"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utente con email " + email + " non trovato"
+                ));
 
         return utenteMapper.toResponse(utente);
     }
 
-    public UtenteResponse getUtenteById(Integer id){
+    @Transactional(readOnly = true)
+    public UtenteResponse getUtenteById(Integer id) {
         Utente utente = utenteRepository
                 .findById(id)
-                .orElseThrow( () -> new RuntimeException("Nessun utente associato all'ID "));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utente con id " + id + " non trovato"
+                ));
 
         return utenteMapper.toResponse(utente);
     }

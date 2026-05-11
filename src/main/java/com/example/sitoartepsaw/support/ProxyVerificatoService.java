@@ -2,6 +2,7 @@ package com.example.sitoartepsaw.support;
 
 import com.example.sitoartepsaw.entity.Utente;
 import com.example.sitoartepsaw.repository.UtenteRepository;
+import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +14,7 @@ public class ProxyVerificatoService {
 
     public boolean isVerificato(Integer utenteId) {
         Utente utente = utenteRepository.findById(utenteId)
-                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
         return utente.getUtenteVerificato() != null;
     }
 }
