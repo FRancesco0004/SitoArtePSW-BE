@@ -37,7 +37,12 @@ public class AcquistoFacade {
             );
         }
 
+        // Manca il pagamento tramite Template Method, sarà tipo
+//      PagamentoTemplate pagamento = pagamentoFactory.get(request.getMetodoPagamento());
+//      pagamento.esegui(oggetto.getCosto(), utente);
+
         oggetto.setStato(StatoOggetto.VENDUTO);
+        oggettoRepository.save(oggetto);
 
         return azioneService.creaAzioneAcquisto(oggetto, request, utente);
     }
