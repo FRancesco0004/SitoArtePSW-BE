@@ -51,13 +51,6 @@ Per tenere il codice pulito, scalabile ed evolvibile abbiamo adottato alcuni Des
 
 ---
 
-## Requisiti
-
-- Java 17 o superiore
-- MySQL 8.0 o superiore
-- Maven 3.8 o superiore
-
----
 
 ## Setup Keycloak (Linux)
 
