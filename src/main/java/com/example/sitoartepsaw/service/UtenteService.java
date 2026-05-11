@@ -56,7 +56,6 @@ public class UtenteService {
         return utenteMapper.toResponse(salvato);
     }
 
-    // Login rimosso — lo gestisce direttamente Keycloak
 
     @Transactional(readOnly = true)
     public UtenteResponse getProfiloUtente(String email) {

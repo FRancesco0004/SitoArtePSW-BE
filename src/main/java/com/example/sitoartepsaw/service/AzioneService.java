@@ -71,6 +71,7 @@ public class AzioneService {
         return azioneMapper.toResponse(salvata);
     }
 
+    @Transactional
     public AzioneResponse creaAzioneAcquisto(
             Oggetto oggetto,
             AcquistoRequest request,
