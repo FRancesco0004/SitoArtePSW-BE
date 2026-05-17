@@ -12,7 +12,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
@@ -24,16 +23,20 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                // CSRF disabilitato: l'autenticazione avviene tramite JWT nell'header,
+                // non con cookie di sessione, quindi l'attacco CSRF non è applicabile
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/utenti/registra"
-                        ).permitAll()
+                        // Registrazione pubblica
+                        .requestMatchers("/api/utenti/registra").permitAll()
+                        // Tutto il resto richiede un JWT valido di Keycloak
                         .anyRequest().authenticated()
                 )
+                // Keycloak valida il JWT ad ogni richiesta tramite la chiave pubblica del realm
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
                 )
+                // Nessuna sessione HTTP — ogni richiesta porta il suo JWT
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(STATELESS)
                 );
@@ -41,6 +44,7 @@ public class SecurityConfiguration {
         return http.build();
     }
 
+    // Permette le richieste dal frontend al backend
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -52,7 +56,7 @@ public class SecurityConfiguration {
         configuration.addAllowedMethod("POST");
         configuration.addAllowedMethod("PUT");
         configuration.addAllowedMethod("DELETE");
-        configuration.addAllowedMethod("OPTIONS");
+        configuration.addAllowedMethod("OPTIONS"); // necessario per il preflight CORS
         source.registerCorsConfiguration("/**", configuration);
         return new CorsFilter(source);
     }
