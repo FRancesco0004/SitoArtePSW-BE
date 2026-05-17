@@ -36,7 +36,7 @@ public class SecurityConfiguration {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
                 )
-                // Nessuna sessione HTTP — ogni richiesta porta il suo JWT
+                // Nessuna sessione HTTP — ogni richiesta porta il suo JWT.
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(STATELESS)
                 );
