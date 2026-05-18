@@ -71,8 +71,6 @@ public class UtenteService {
         return utenteMapper.toResponse(utente);
     }
 
-    // ======================== KEYCLOAK ========================
-
     // Ottiene un token admin fresco ad ogni chiamata
     // Il token admin scade ogni 5 minuti quindi non si può salvare
     private String getAdminToken() {
@@ -109,19 +107,19 @@ public class UtenteService {
     private void creaUtenteKeycloak(RegistrazioneRequest request) {
         try {
             String body = String.format("""
-                {
-                    "username": "%s",
-                    "email": "%s",
-                    "firstName": "%s",
-                    "lastName": "%s",
-                    "enabled": true,
-                    "credentials": [{
-                        "type": "password",
-                        "value": "%s",
-                        "temporary": false
-                    }]
-                }
-                """,
+            {
+                "username": "%s",
+                "email": "%s",
+                "firstName": "%s",
+                "lastName": "%s",
+                "enabled": true,
+                "credentials": [{
+                    "type": "password",
+                    "value": "%s",
+                    "temporary": false
+                }]
+            }
+            """,
                     request.getEmail(),
                     request.getEmail(),
                     request.getNome(),
@@ -130,22 +128,63 @@ public class UtenteService {
             );
 
             HttpClient client = HttpClient.newHttpClient();
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(URI.create(keycloakServerUrl
-                            + "/admin/realms/" + realm + "/users"))
+            String adminToken = getAdminToken();
+
+            // Crea l'utente
+            HttpRequest createRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(keycloakServerUrl + "/admin/realms/" + realm + "/users"))
                     .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + getAdminToken())
+                    .header("Authorization", "Bearer " + adminToken)
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
 
-            HttpResponse<String> response = client.send(
-                    httpRequest,
+            HttpResponse<String> createResponse = client.send(
+                    createRequest,
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (response.statusCode() != 201) {
+            if (createResponse.statusCode() != 201) {
                 throw new RuntimeException("Errore creazione utente su Keycloak: "
-                        + response.body());
+                        + createResponse.body());
+            }
+
+            // Estrae l'id dell'utente appena creato dall'header Location
+            String location = createResponse.headers()
+                    .firstValue("Location")
+                    .orElseThrow(() -> new RuntimeException("Location header non trovato"));
+            String userId = location.substring(location.lastIndexOf("/") + 1);
+
+            // Recupera l'id del ruolo USER da Keycloak
+            HttpRequest getRoleRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(keycloakServerUrl + "/admin/realms/" + realm + "/roles/USER"))
+                    .header("Authorization", "Bearer " + adminToken)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> getRoleResponse = client.send(
+                    getRoleRequest,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            // Assegna il ruolo USER all'utente
+            HttpRequest assignRoleRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(keycloakServerUrl
+                            + "/admin/realms/" + realm
+                            + "/users/" + userId
+                            + "/role-mappings/realm"))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + adminToken)
+                    .POST(HttpRequest.BodyPublishers.ofString("[" + getRoleResponse.body() + "]"))
+                    .build();
+
+            HttpResponse<String> assignResponse = client.send(
+                    assignRoleRequest,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            if (assignResponse.statusCode() != 204) {
+                throw new RuntimeException("Errore assegnazione ruolo USER: "
+                        + assignResponse.body());
             }
 
         } catch (RuntimeException e) {
