@@ -35,16 +35,8 @@ public class UtenteService {
     @Value("${keycloak.admin-password}")
     private String adminPassword;
 
-    public boolean existsByEmail(String email) {
-        return utenteRepository.existsByEmail(email);
-    }
-
     @Transactional
     public UtenteResponse registraUtente(RegistrazioneRequest request) {
-
-        if (existsByEmail(request.getEmail())) {
-            throw new ConflictException("Email già in uso: " + request.getEmail());
-        }
 
         // Crea utente su Keycloak via REST API
         creaUtenteKeycloak(request);
