@@ -46,7 +46,7 @@ public class AzioneController {
     // Lo implementiamo dopo, quando creiamo la logica di vendita nella facade
     /*
     @PostMapping("/vendi/{oggettoId}")
-    @PreAuthorize("@proxyVerificatoService.isVerificato(#utente.id)")
+    @PreAuthorize("@proxyVerificatoService.isVerificato(authentication)")
     public ResponseEntity<AzioneResponse> vendi(
             @PathVariable Integer oggettoId,
             @Valid @RequestBody AcquistoRequest request,

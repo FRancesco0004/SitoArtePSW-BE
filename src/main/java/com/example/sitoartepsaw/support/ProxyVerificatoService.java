@@ -4,17 +4,18 @@ import com.example.sitoartepsaw.entity.Utente;
 import com.example.sitoartepsaw.repository.UtenteRepository;
 import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 @Service("proxyVerificatoService")
 @RequiredArgsConstructor
 public class ProxyVerificatoService {
 
-    private final UtenteRepository utenteRepository;
-
-    public boolean isVerificato(Integer utenteId) {
-        Utente utente = utenteRepository.findById(utenteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
-        return utente.getUtenteVerificato() != null;
+    // Controlla se l'utente ha il ruolo USER_VERIFICATO nel token Keycloak
+    // senza fare query al DB
+    public boolean isVerificato(Authentication authentication) {
+        return authentication.getAuthorities()
+                .stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER_VERIFICATO"));
     }
 }

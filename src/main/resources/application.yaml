@@ -16,12 +16,19 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MariaDBDialect
+        dialect: org.hibernate.dialect.MySQLDialect
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/art-platform
+          issuer-uri: http://localhost:8180/realms/art-platform #lo configurerò poi con https in production
+#  In production quando avrà un certificato sul server aggiungerò le direttive SSL
+#  server:
+#    ssl:
+#      enabled: true
+#      key-store: classpath:keystore.p12
+#      key-store-password: ${SSL_PASSWORD}
+#      key-store-type: PKCS12
 
 keycloak:
   server-url: http://localhost:8180

@@ -51,6 +51,13 @@ Per tenere il codice pulito, scalabile ed evolvibile abbiamo adottato alcuni Des
 
 ---
 
+## Requisiti
+
+- Java 17 o superiore
+- MySQL 8.0 o superiore
+- Maven 3.8 o superiore
+
+---
 
 ## Setup Keycloak (Linux)
 
@@ -106,9 +113,38 @@ Esegui i seguenti comandi in ordine dalla cartella `bin` di Keycloak:
   -s directAccessGrantsEnabled=true \
   -s 'redirectUris=["http://localhost:8080/*"]' \
   -s 'webOrigins=["http://localhost:8080"]'
+
+# Crea i ruoli della piattaforma
+./kcadm.sh create roles \
+  -r art-platform \
+  -s name=USER
+
+./kcadm.sh create roles \
+  -r art-platform \
+  -s name=USER_VERIFICATO
 ```
 
 > ⚠️ Questi comandi vanno eseguiti **una sola volta** durante il primo setup.
+
+### 5. Assegnare un ruolo a un utente
+
+Dopo la registrazione, assegna il ruolo appropriato all'utente:
+
+```bash
+# Assegna USER a un utente standard
+./kcadm.sh add-roles \
+  -r art-platform \
+  --uusername email@example.com \
+  --rolename USER
+
+# Assegna USER_VERIFICATO a un utente verificato
+./kcadm.sh add-roles \
+  -r art-platform \
+  --uusername email@example.com \
+  --rolename USER_VERIFICATO
+```
+
+> ℹ️ Un utente verificato può sia comprare che vendere. Un utente standard può solo tentare l'acquisto.
 
 ---
 
