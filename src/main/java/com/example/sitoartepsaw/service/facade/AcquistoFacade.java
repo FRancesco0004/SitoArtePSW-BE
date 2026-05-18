@@ -7,6 +7,9 @@ import com.example.sitoartepsaw.entity.Utente;
 import com.example.sitoartepsaw.enums.StatoOggetto;
 import com.example.sitoartepsaw.repository.OggettoRepository;
 import com.example.sitoartepsaw.service.AzioneService;
+import com.example.sitoartepsaw.service.observer.AcquistoSubject;
+import com.example.sitoartepsaw.service.payment.factory.PagamentoFactory;
+import com.example.sitoartepsaw.service.payment.PagamentoTemplate;
 import com.example.sitoartepsaw.support.exceptions.ConflictException;
 import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,8 @@ public class AcquistoFacade {
 
     private final OggettoRepository oggettoRepository;
     private final AzioneService azioneService;
+    private final PagamentoFactory pagamentoFactory;
+    private final AcquistoSubject acquistoSubject;
 
     @Transactional
     public AzioneResponse compra(
@@ -37,13 +42,17 @@ public class AcquistoFacade {
             );
         }
 
-        // Manca il pagamento tramite Template Method, sarà tipo
-//      PagamentoTemplate pagamento = pagamentoFactory.get(request.getMetodoPagamento());
-//      pagamento.esegui(oggetto.getCosto(), utente);
+        PagamentoTemplate pagamento = pagamentoFactory.get(request.getMetodoPagamento());
+
+        pagamento.esegui(oggetto.getCosto(), utente);
 
         oggetto.setStato(StatoOggetto.VENDUTO);
         oggettoRepository.save(oggetto);
 
-        return azioneService.creaAzioneAcquisto(oggetto, request, utente);
+        AzioneResponse response = azioneService.creaAzioneAcquisto(oggetto, request, utente);
+
+        acquistoSubject.notificaAcquisto(oggetto, utente);
+
+        return response;
     }
 }
