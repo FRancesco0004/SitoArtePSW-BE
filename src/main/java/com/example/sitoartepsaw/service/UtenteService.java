@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +49,6 @@ public class UtenteService {
         return utenteMapper.toResponse(salvato);
     }
 
-
     @Transactional(readOnly = true)
     public UtenteResponse getProfiloUtente(String email) {
         Utente utente = utenteRepository
@@ -59,6 +59,81 @@ public class UtenteService {
                         "Utente con email " + email + " non trovato"
                 ));
         return utenteMapper.toResponse(utente);
+    }
+
+    @Transactional
+    public void cancellaAccount(String email) {
+
+        Utente utente = utenteRepository
+                .findByEmail(email)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utente non trovato"));
+
+        // Anonimizza i dati personali secondo il GDPR
+        String uuid = UUID.randomUUID().toString();
+        utente.setNome("Utente");
+        utente.setCognome("Cancellato");
+        utente.setEmail("deleted_" + uuid + "@deleted.com");
+        utente.setAttivo(false);
+        utenteRepository.save(utente);
+
+        // Disabilita su Keycloak
+        disabilitaUtenteKeycloak(email);
+    }
+
+    private void disabilitaUtenteKeycloak(String email) {
+        try {
+            String adminToken = getAdminToken();
+            HttpClient client = HttpClient.newHttpClient();
+
+            // Trova l'id utente su Keycloak tramite email
+            HttpRequest findRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(keycloakServerUrl
+                            + "/admin/realms/" + realm
+                            + "/users?email=" + email))
+                    .header("Authorization", "Bearer " + adminToken)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> findResponse = client.send(
+                    findRequest,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            // Estraiamo l'id dal JSON
+            String userId = findResponse.body()
+                    .split("\"id\":\"")[1]
+                    .split("\"")[0];
+
+            String body = "{\"enabled\": false}";
+
+            HttpRequest disableRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(keycloakServerUrl
+                            + "/admin/realms/" + realm
+                            + "/users/" + userId))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + adminToken)
+                    .PUT(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+
+            HttpResponse<String> disableResponse = client.send(
+                    disableRequest,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            if (disableResponse.statusCode() != 204) {
+                throw new RuntimeException("Errore disabilitazione utente su Keycloak: "
+                        + disableResponse.body());
+            }
+
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Errore comunicazione con Keycloak: "
+                    + e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)

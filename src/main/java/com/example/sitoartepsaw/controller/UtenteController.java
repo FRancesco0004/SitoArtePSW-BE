@@ -29,4 +29,11 @@ public class UtenteController {
         String email = Utils.getEmail();
         return ResponseEntity.ok(utenteService.getProfiloUtente(email));
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> cancellaAccount() {
+        String email = Utils.getEmail();
+        utenteService.cancellaAccount(email);
+        return ResponseEntity.noContent().build();
+    }
 }
