@@ -6,25 +6,28 @@ import com.example.sitoartepsaw.support.exceptions.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class PagamentoFactory {
 
-    private final PaypalPagamento paypalPagamento;
-    private final BonificoPagamento bonificoPagamento;
-    private final P2PPagamento p2pPagamento;
-    private final RevolutPagamento revolutPagamento;
+    private HashMap<MetodoPagamento, PagamentoTemplate> tipiPagamento = new HashMap<>();
 
-    public PagamentoTemplate get(MetodoPagamento metodoPagamento) {
-        if (metodoPagamento == null) {
-            throw new BadRequestException("Metodo di pagamento obbligatorio");
+    public PagamentoFactory(List<PagamentoTemplate> pagamenti) {
+        this.tipiPagamento = new HashMap<>();
+
+        for (PagamentoTemplate pagamento : pagamenti) {
+            this.tipiPagamento.put(pagamento.getMetodoPagamento(), pagamento);
+        }
+    }
+
+    public PagamentoTemplate get(MetodoPagamento metodo) {
+        if (metodo == null || !tipiPagamento.containsKey(metodo)) {
+            throw new BadRequestException("Metodo di pagamento non valido o non supportato");
         }
 
-        return switch (metodoPagamento) {
-            case PAYPAL -> paypalPagamento;
-            case BONIFICO -> bonificoPagamento;
-            case P2P -> p2pPagamento;
-            case REVOLUT -> revolutPagamento;
-        };
+        return this.tipiPagamento.get(metodo);
     }
 }

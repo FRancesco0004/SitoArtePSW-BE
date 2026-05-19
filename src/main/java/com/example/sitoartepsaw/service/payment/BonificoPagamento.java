@@ -1,6 +1,7 @@
 package com.example.sitoartepsaw.service.payment;
 
 import com.example.sitoartepsaw.entity.Utente;
+import com.example.sitoartepsaw.enums.MetodoPagamento;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -13,4 +14,8 @@ public class BonificoPagamento extends PagamentoTemplate {
         System.out.println("Hai pagato "+importo+" € con un Bonifico");
         return "BONIFICO-" + UUID.randomUUID();
     }
+    public MetodoPagamento getMetodoPagamento(){
+        return MetodoPagamento.BONIFICO;
+    }
+
 }
