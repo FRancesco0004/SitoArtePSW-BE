@@ -47,6 +47,7 @@ public class AcquistoFacade {
         pagamento.esegui(oggetto.getCosto(), utente);
 
         oggetto.setStato(StatoOggetto.VENDUTO);
+
         oggettoRepository.save(oggetto);
 
         AzioneResponse response = azioneService.creaAzioneAcquisto(oggetto, request, utente);

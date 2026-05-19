@@ -1,6 +1,7 @@
 package com.example.sitoartepsaw.service.payment;
 
 import com.example.sitoartepsaw.entity.Utente;
+import com.example.sitoartepsaw.enums.MetodoPagamento;
 import com.example.sitoartepsaw.support.exceptions.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +25,8 @@ public abstract class PagamentoTemplate {
             throw new BadRequestException("Importo non valido");
         }
     }
+
+    public abstract MetodoPagamento getMetodoPagamento();
 
     protected abstract String chiamaApi(BigDecimal importo, Utente utente);
 
