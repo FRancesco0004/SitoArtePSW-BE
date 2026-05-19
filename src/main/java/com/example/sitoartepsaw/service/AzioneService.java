@@ -28,6 +28,7 @@ public class AzioneService {
     private final OggettoRepository oggettoRepository;
     private final AzioneMapper azioneMapper;
 
+    @Transactional(readOnly = true)
     public List<AzioneResponse> getStorico(Integer utenteId) {
         return azioneRepository
                 .findByUtenteId(utenteId)
@@ -36,6 +37,7 @@ public class AzioneService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public AzioneResponse getAzione(Integer azioneId, Integer utenteId) {
         Azione azione = azioneRepository.findById(azioneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Azione non trovata"));
