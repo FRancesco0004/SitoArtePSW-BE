@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class PagamentoFactory {
 
     private HashMap<MetodoPagamento, PagamentoTemplate> tipiPagamento = new HashMap<>();
