@@ -5,11 +5,12 @@ import com.example.sitoartepsaw.dto.response.AzioneResponse;
 import com.example.sitoartepsaw.entity.Autore;
 import com.example.sitoartepsaw.entity.Oggetto;
 import com.example.sitoartepsaw.entity.Utente;
-import com.example.sitoartepsaw.enums.StatoOggetto;
 import com.example.sitoartepsaw.repository.AutoreRepository;
 import com.example.sitoartepsaw.repository.OggettoRepository;
+import com.example.sitoartepsaw.repository.UtenteRepository;
 import com.example.sitoartepsaw.repository.UtenteVerificatoRepository;
 import com.example.sitoartepsaw.service.AzioneService;
+import com.example.sitoartepsaw.service.oggettoFactory.OggettoFactory;
 import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import com.example.sitoartepsaw.support.exceptions.UnauthorizedActionException;
 import lombok.RequiredArgsConstructor;
@@ -24,17 +25,19 @@ public class VenditaFacade {
     private final AutoreRepository autoreRepository;
     private final UtenteVerificatoRepository utenteVerificatoRepository;
     private final AzioneService azioneService;
+    private final UtenteRepository utenteRepository;
+    private final OggettoFactory oggettoFactory;
+
 
     @Transactional
     public AzioneResponse vendi(
             VenditaRequest request,
-            Utente utente
+            String email
     ) {
-        if (!utenteVerificatoRepository.existsById(utente.getId())) {
-            throw new UnauthorizedActionException(
-                    "Solo gli utenti verificati possono mettere in vendita un'opera"
-            );
-        }
+        Utente utente = utenteRepository.findByEmail(email)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
 
         Autore autore = null;
 
@@ -44,20 +47,13 @@ public class VenditaFacade {
                             "Autore con id " + request.getAutoreId() + " non trovato"
                     ));
         }
+        if (!utenteVerificatoRepository.existsById(utente.getId())) {
+            throw new UnauthorizedActionException(
+                    "Solo gli utenti verificati possono mettere in vendita un'opera"
+            );
+        }
 
-        Oggetto oggetto = Oggetto.builder()
-                .titolo(request.getTitolo())
-                .descrizione(request.getDescrizione())
-                .anno(request.getAnno())
-                .costo(request.getCosto())
-                .grandezza(request.getGrandezza())
-                .linkImmagine(request.getLinkImmagine())
-                .tipoOpera(request.getTipoOpera())
-                .peso(request.getPeso())
-                .stato(StatoOggetto.DISPONIBILE)
-                .autore(autore)
-                .build();
-
+        Oggetto oggetto = oggettoFactory.crea(request, autore);
         Oggetto salvato = oggettoRepository.save(oggetto);
 
         return azioneService.creaAzioneVendita(salvato, utente);

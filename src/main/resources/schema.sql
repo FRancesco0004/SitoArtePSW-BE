@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS oggetti (
     anno INT,
     costo DECIMAL(10, 2) NOT NULL,
     grandezza VARCHAR(100),
+    version INT NOT NULL DEFAULT 0,
     link_immagine VARCHAR(500),
     tipo_opera ENUM('DIPINTO', 'SCULTURA') NOT NULL,
     peso DECIMAL(10, 2),
