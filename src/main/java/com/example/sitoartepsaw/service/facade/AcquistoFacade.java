@@ -1,6 +1,7 @@
 package com.example.sitoartepsaw.service.facade;
 
 import com.example.sitoartepsaw.dto.request.AcquistoRequest;
+import com.example.sitoartepsaw.dto.request.VenditaRequest;
 import com.example.sitoartepsaw.dto.response.AzioneResponse;
 import com.example.sitoartepsaw.entity.Oggetto;
 import com.example.sitoartepsaw.entity.Utente;
@@ -56,4 +57,5 @@ public class AcquistoFacade {
 
         return response;
     }
+
 }

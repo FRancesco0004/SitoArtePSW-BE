@@ -93,4 +93,24 @@ public class AzioneService {
 
         return azioneMapper.toResponse(salvata);
     }
+
+    @Transactional
+    public AzioneResponse creaAzioneVendita(
+            Oggetto oggetto,
+            Utente utente
+    ) {
+        Azione azione = Azione.builder()
+                .data(LocalDateTime.now())
+                .tipoAzione(TipoAzione.VENDE)
+                .prezzoAlMomento(oggetto.getCosto())
+                .metodoPagamento(null)
+                .annullata(false)
+                .utente(utente)
+                .oggetto(oggetto)
+                .build();
+
+        Azione salvata = azioneRepository.save(azione);
+
+        return azioneMapper.toResponse(salvata);
+    }
 }
