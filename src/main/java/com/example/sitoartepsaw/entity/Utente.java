@@ -51,20 +51,4 @@ public class Utente{
     // ogni volta che carichiamo un Utente.
     @OneToOne(mappedBy = "utente", fetch = FetchType.LAZY)
     private UtenteVerificato utenteVerificato;
-
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-    }
-
-    public String getUsername() {
-        return email;
-    }
-
-    public boolean isAccountNonExpired() { return true; }
-
-    public boolean isAccountNonLocked() { return true; }
-
-    public boolean isCredentialsNonExpired() { return true; }
-
-    public boolean isEnabled() { return true; }
 }

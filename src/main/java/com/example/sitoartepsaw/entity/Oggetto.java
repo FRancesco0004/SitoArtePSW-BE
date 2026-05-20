@@ -41,7 +41,7 @@ public class Oggetto {
     @Column(name = "grandezza", nullable = true, length = 100)
     private String grandezza;
 
-    @Basic
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "link_immagine", nullable = true, length = 500)
     private String linkImmagine;
 
