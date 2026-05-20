@@ -8,13 +8,13 @@ import com.example.sitoartepsaw.repository.UtenteRepository;
 import com.example.sitoartepsaw.service.AzioneService;
 import com.example.sitoartepsaw.service.facade.VenditaFacade;
 import com.example.sitoartepsaw.service.facade.AcquistoFacade;
-import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
+import com.example.sitoartepsaw.support.Utils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,33 +32,22 @@ public class AzioneController {
     @PostMapping("/compra/{oggettoId}")
     public ResponseEntity<AzioneResponse> compra(
             @PathVariable Integer oggettoId,
-            @Valid @RequestBody AcquistoRequest request,
-            @AuthenticationPrincipal Jwt jwt
+            @Valid @RequestBody AcquistoRequest request
     ) {
-        // Carica l'utente dal DB usando l'email del token
-        String email = jwt.getClaimAsString("email");
-        Utente utente = utenteRepository.findByEmail(email)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
+        String email = Utils.getEmail();
 
-        AzioneResponse response = acquistoFacade.compra(oggettoId, request, utente);
+        AzioneResponse response = acquistoFacade.compra(oggettoId, request, email);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/vendi")
+    @PreAuthorize("hasRole('USER_VERIFICATO')")
     public ResponseEntity<AzioneResponse> vendi(
-            @Valid @RequestBody VenditaRequest request,
-            @AuthenticationPrincipal Jwt jwt
+            @Valid @RequestBody VenditaRequest request
     ) {
-        String email = jwt.getClaimAsString("email");
+        String email = Utils.getEmail();
 
-        Utente utente = utenteRepository.findByEmail(email)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
-
-        AzioneResponse response = venditaFacade.vendi(request, utente);
+        AzioneResponse response = venditaFacade.vendi(request, email);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

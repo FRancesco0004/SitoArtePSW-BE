@@ -138,7 +138,7 @@ Dopo la registrazione, assegna il ruolo appropriato all'utente:
   --rolename USER
 
 # Assegna USER_VERIFICATO a un utente verificato
-./kcadm.sh add-roles \
+./admin/master/console/#state=e0254b1d-705e-43c9-a19e-5f982b8d9649&session_state=2ea01319-ff70-4929-a57c-81d7c3e51c65&iss=http%3A%2F%2Flocalhost%3A8180%2Frealms%2Fmaster&code=92b467e0-153d-4ee1-af40-5cc039c09ca8.2ea01319-ff70-4929-a57c-81d7c3e51c65.1eded751-6a6b-4771-8934-8cde2ca24f24/kcadm.sh add-roles \
   -r art-platform \
   --uusername email@example.com \
   --rolename USER_VERIFICATO
