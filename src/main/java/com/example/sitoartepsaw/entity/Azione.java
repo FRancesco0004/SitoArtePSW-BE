@@ -32,8 +32,9 @@ public class Azione {
     @Column(name = "prezzo_al_momento", nullable = false, precision = 10, scale = 2)
     private BigDecimal prezzoAlMomento;
 
+    //La business logic la gestiamo dopo perchè metodo_pagamento può essere null in VENDE ma non in COMPRA
     @Enumerated(EnumType.STRING)
-    @Column(name = "metodo_pagamento", nullable = false)
+    @Column(name = "metodo_pagamento", nullable = true)
     private MetodoPagamento metodoPagamento;
 
     @Basic

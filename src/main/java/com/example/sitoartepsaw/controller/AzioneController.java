@@ -1,10 +1,12 @@
 package com.example.sitoartepsaw.controller;
 
 import com.example.sitoartepsaw.dto.request.AcquistoRequest;
+import com.example.sitoartepsaw.dto.request.VenditaRequest;
 import com.example.sitoartepsaw.dto.response.AzioneResponse;
 import com.example.sitoartepsaw.entity.Utente;
 import com.example.sitoartepsaw.repository.UtenteRepository;
 import com.example.sitoartepsaw.service.AzioneService;
+import com.example.sitoartepsaw.service.facade.VenditaFacade;
 import com.example.sitoartepsaw.service.facade.AcquistoFacade;
 import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
@@ -25,6 +27,7 @@ public class AzioneController {
     private final AzioneService azioneService;
     private final AcquistoFacade acquistoFacade;
     private final UtenteRepository utenteRepository;
+    private final VenditaFacade venditaFacade;
 
     @PostMapping("/compra/{oggettoId}")
     public ResponseEntity<AzioneResponse> compra(
@@ -43,19 +46,22 @@ public class AzioneController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // Lo implementiamo dopo, quando creiamo la logica di vendita nella facade
-    /*
-    @PostMapping("/vendi/{oggettoId}")
-    @PreAuthorize("@proxyVerificatoService.isVerificato(authentication)")
+    @PostMapping("/vendi")
     public ResponseEntity<AzioneResponse> vendi(
-            @PathVariable Integer oggettoId,
-            @Valid @RequestBody AcquistoRequest request,
-            @AuthenticationPrincipal Utente utente
+            @Valid @RequestBody VenditaRequest request,
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        AzioneResponse response = acquistoFacade.vendi(oggettoId, request, utente);
+        String email = jwt.getClaimAsString("email");
+
+        Utente utente = utenteRepository.findByEmail(email)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
+
+        AzioneResponse response = venditaFacade.vendi(request, utente);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    */
 
     @GetMapping("/storico")
     public ResponseEntity<List<AzioneResponse>> getStorico(
