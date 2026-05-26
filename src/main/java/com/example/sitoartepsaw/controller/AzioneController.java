@@ -26,7 +26,6 @@ public class AzioneController {
 
     private final AzioneService azioneService;
     private final AcquistoFacade acquistoFacade;
-    private final UtenteRepository utenteRepository;
     private final VenditaFacade venditaFacade;
 
     @PostMapping("/compra/{oggettoId}")
