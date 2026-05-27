@@ -40,6 +40,7 @@ public class Utente{
     @Column(name = "email", unique = true, nullable = false, length = 255)
     private String email;
 
+    @Builder.Default
     @Basic
     @Column(name = "attivo", nullable = false)
     private Boolean attivo = true;
