@@ -27,7 +27,7 @@ Per tenere il codice pulito, scalabile ed evolvibile abbiamo adottato alcuni Des
 
 **Factory Method** — Quando si aggiunge un'opera la Factory decide quale oggetto istanziare in base al tipo ricevuto, rappresentato da un'enum (`TipoOpera.DIPINTO` / `TipoOpera.SCULTURA`).
 
-**Builder** — Invece di un costruttore con dieci parametri che nessuno ricorda in quale ordine vadano, usiamo il Builder attraverso la notazione @Builder di Lombok.
+**Builder** — Invece di un costruttore con dieci parametri che nessuno ricorda in quale ordine vadano, usiamo il Builder attraverso la notazione `@Builder` di Lombok.
 
 ### Come colleghiamo i pezzi
 
@@ -54,57 +54,86 @@ Per tenere il codice pulito, scalabile ed evolvibile abbiamo adottato alcuni Des
 ## Requisiti
 
 - Java 17 o superiore
-- MySQL 8.0 o superiore
 - Maven 3.8 o superiore
+- Docker e Docker Compose
 
 ---
 
-## Setup Keycloak (Linux)
+## Setup e Avvio con Docker
 
-Keycloak gestisce tutta l'autenticazione — login, token JWT e gestione utenti. Non è una libreria ma un server separato che va avviato prima del backend.
+L'intera infrastruttura del progetto (Database MySQL, Server Keycloak e Backend Spring Boot) è containerizzata e gestita tramite Docker Compose. Non è necessario installare o avviare alcun servizio manualmente.
 
-### 1. Scarica Keycloak
+### 1. Variabili d'ambiente (File `.env`)
+Prima di avviare il progetto, assicurati di avere un file chiamato esattamente `.env` nella directory principale (root) del progetto, allo stesso livello del file `docker-compose.yml`.
+
+Il file deve contenere queste variabili essenziali per il routing e la sicurezza:
+
+```env
+DB_CONTAINER_PORT=3306
+DB_IMAGE=mysql:8.0
+DB_LOCAL_PORT=3307
+DB_PASSWORD=1234
+DB_ROOT_PASSWORD=1234
+DB_USERNAME=art_admin
+KEYCLOAK_ADMIN_PASSWORD=admin
+KEYCLOAK_ADMIN_USERNAME=admin
+KEYCLOAK_IMAGE=quay.io/keycloak/keycloak:latest
+KEYCLOAK_LOCAL_PORT=8180
+```
+
+### 2. Attivazione del demone Docker (Solo Linux)
+Se stai utilizzando un ambiente Linux, assicurati che il motore di Docker sia in esecuzione in background prima di procedere:
+```bash
+sudo systemctl start docker
+```
+*(Opzionale)* Per far sì che Docker si avvii automaticamente all'accensione del PC, esegui anche: `sudo systemctl enable docker`.
+
+### 3. Compilazione del Backend
+Docker non compila il codice Java, ma impacchetta l'eseguibile. Pertanto, **ogni volta che modifichi il codice sorgente Java**, devi generare un nuovo file `.jar` prima di avviare i container:
 
 ```bash
-curl -L https://github.com/keycloak/keycloak/releases/download/24.0.4/keycloak-24.0.4.tar.gz -o keycloak.tar.gz
-tar -xzf keycloak.tar.gz
-cd keycloak-24.0.4/bin
+./mvnw clean package -DskipTests
 ```
+> **Quando farlo?** Solo dopo aver fatto modifiche al codice tramite il tuo IDE (es. IntelliJ). Se devi solo accendere l'infrastruttura per testare le API e non hai toccato il codice, puoi saltare questo passaggio.
 
-### 2. Avvia Keycloak per la prima volta
+### 4. Avvio dell'ambiente
+Per far partire simultaneamente Database, Keycloak e Backend in background, esegui:
 
 ```bash
-./kc.sh start-dev --http-port=8180
+sudo docker compose up -d --build
 ```
+Una volta avviato, i servizi saranno raggiungibili a questi indirizzi:
+- **Backend (API):** `http://localhost:8080`
+- **Keycloak (Console Admin):** `http://localhost:8180`
+- **MySQL:** `localhost:3307`
 
-Aspetta fino a quando vedi nel terminale:
+---
 
-```
-Keycloak 24.0.4 on JVM started. Listening on: http://0.0.0.0:8180
-```
+## Configurazione di Keycloak (Solo al primo avvio)
+Dato che il container di Keycloak parte da zero, è necessario configurare il Realm, il Client e i Ruoli. Invece di installare Keycloak sul PC, eseguiremo lo script direttamente all'interno del container in esecuzione.
 
-### 3. Crea l'utente admin
-
-Apri il browser su `http://localhost:8180` e crea l'utente admin con username `admin` e password `admin`.
-
-### 4. Configura Keycloak (da un secondo terminale)
-
-Esegui i seguenti comandi in ordine dalla cartella `bin` di Keycloak:
-
+**1. Entra nel terminale del container di Keycloak:**
 ```bash
-# Autenticati come admin
+sudo docker exec -it app_keycloak bash
+cd /opt/keycloak/bin
+```
+
+**2. Autenticati internamente:**
+*(Nota: internamente al container, Keycloak risponde sulla porta 8080)*
+```bash
 ./kcadm.sh config credentials \
-  --server http://localhost:8180 \
+  --server http://localhost:8080 \
   --realm master \
   --user admin \
   --password admin
+```
 
-# Crea il realm
+**3. Crea il realm e il client:**
+```bash
 ./kcadm.sh create realms \
   -s realm=art-platform \
   -s enabled=true
 
-# Crea il client
 ./kcadm.sh create clients \
   -r art-platform \
   -s clientId=art-platform-client \
@@ -113,105 +142,32 @@ Esegui i seguenti comandi in ordine dalla cartella `bin` di Keycloak:
   -s directAccessGrantsEnabled=true \
   -s 'redirectUris=["http://localhost:8080/*"]' \
   -s 'webOrigins=["http://localhost:8080"]'
-
-# Crea i ruoli della piattaforma
-./kcadm.sh create roles \
-  -r art-platform \
-  -s name=USER
-
-./kcadm.sh create roles \
-  -r art-platform \
-  -s name=USER_VERIFICATO
 ```
 
-> ⚠️ Questi comandi vanno eseguiti **una sola volta** durante il primo setup.
+**4. Crea i ruoli della piattaforma:**
+```bash
+./kcadm.sh create roles -r art-platform -s name=USER
+./kcadm.sh create roles -r art-platform -s name=USER_VERIFICATO
+```
+*(Digita `exit` per uscire dal terminale del container e tornare al tuo PC).*
 
-### 5. Assegnare un ruolo a un utente
-
-Dopo la registrazione, assegna il ruolo appropriato all'utente:
+### Assegnare un ruolo a un utente
+Dopo che un utente si è registrato, puoi assegnargli un ruolo ripetendo l'accesso al container (`sudo docker exec -it app_keycloak bash`) ed eseguendo:
 
 ```bash
-# Assegna USER a un utente standard
-./kcadm.sh add-roles \
-  -r art-platform \
-  --uusername email@example.com \
-  --rolename USER
+# Per un utente standard:
+./opt/keycloak/bin/kcadm.sh add-roles -r art-platform --uusername email@example.com --rolename USER
 
-# Assegna USER_VERIFICATO a un utente verificato
-./admin/master/console/#state=e0254b1d-705e-43c9-a19e-5f982b8d9649&session_state=2ea01319-ff70-4929-a57c-81d7c3e51c65&iss=http%3A%2F%2Flocalhost%3A8180%2Frealms%2Fmaster&code=92b467e0-153d-4ee1-af40-5cc039c09ca8.2ea01319-ff70-4929-a57c-81d7c3e51c65.1eded751-6a6b-4771-8934-8cde2ca24f24/kcadm.sh add-roles \
-  -r art-platform \
-  --uusername email@example.com \
-  --rolename USER_VERIFICATO
+# Per un utente verificato:
+./opt/keycloak/bin/kcadm.sh add-roles -r art-platform --uusername email@example.com --rolename USER_VERIFICATO
 ```
-
-> ℹ️ Un utente verificato può sia comprare che vendere. Un utente standard può solo tentare l'acquisto.
 
 ---
 
-## Avvio del progetto
-
-Ogni volta che si vuole lavorare al progetto, avviare sempre Keycloak **prima** del backend:
+## Spegnimento dell'ambiente
+Per fermare l'applicazione e liberare la memoria del sistema, posizionati nella cartella del progetto ed esegui:
 
 ```bash
-# Terminale 1 — avvia Keycloak
-cd keycloak-24.0.4/bin
-./kc.sh start-dev --http-port=8180
-
-# Terminale 2 — avvia Spring Boot
-./mvnw spring-boot:run
+sudo docker compose down
 ```
-
-> ⚠️ Senza Keycloak attivo la registrazione e il login non funzionano.
-
----
-
-## Variabili d'ambiente
-
-Prima di avviare il backend configura le seguenti variabili d'ambiente in IntelliJ (Run → Edit Configurations → Environment Variables):
-
-```
-DB_USERNAME             = il tuo username MySQL
-DB_PASSWORD             = la tua password MySQL
-KEYCLOAK_ADMIN_USERNAME = admin
-KEYCLOAK_ADMIN_PASSWORD = admin
-```
-
----
-
-## API principali
-
-### Registrazione
-
-```
-POST http://localhost:8080/api/utenti/registra
-Content-Type: application/json
-
-{
-    "nome": "Mario",
-    "cognome": "Rossi",
-    "email": "mario.rossi@test.it",
-    "password": "Password123!"
-}
-```
-
-### Login
-
-```
-POST http://localhost:8180/realms/art-platform/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-client_id=art-platform-client
-username=mario.rossi@test.it
-password=Password123!
-grant_type=password
-```
-
-Restituisce un `access_token` JWT da usare nelle richieste successive.
-
-### Richieste autenticate
-
-Aggiungi l'header ad ogni richiesta protetta:
-
-```
-Authorization: Bearer <access_token>
-```
+> I dati del database (e tutte le configurazioni di Keycloak che hai appena fatto) sono salvati in volumi permanenti e non andranno persi allo spegnimento. Al prossimo `docker compose up -d`, la piattaforma sarà già pronta all'uso!
