@@ -2,7 +2,7 @@ spring:
   application:
     name: art_platform
   datasource:
-    url: jdbc:mysql://localhost:3306/art_platform?createDatabaseIfNotExist=true
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:${DB_CONTAINER_PORT:3306}/art_platform?createDatabaseIfNotExist=true}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -21,17 +21,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/art-platform #lo configurerò poi con https in production
-#  In production quando avrà un certificato sul server aggiungerò le direttive SSL
-#  server:
-#    ssl:
-#      enabled: true
-#      key-store: classpath:keystore.p12
-#      key-store-password: ${SSL_PASSWORD}
-#      key-store-type: PKCS12
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:${KEYCLOAK_LOCAL_PORT:8180}/realms/art-platform}
 
 keycloak:
-  server-url: http://localhost:8180
-  realm: art-platform
-  admin-username: ${KEYCLOAK_ADMIN_USERNAME}
-  admin-password: ${KEYCLOAK_ADMIN_PASSWORD}
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:${KEYCLOAK_LOCAL_PORT:8180}}
+    realm: art-platform
+    admin-username: ${KEYCLOAK_ADMIN_USERNAME}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD}
+
+kind: Application
