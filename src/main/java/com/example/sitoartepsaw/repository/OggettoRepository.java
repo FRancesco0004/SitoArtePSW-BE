@@ -17,6 +17,19 @@ public interface OggettoRepository extends JpaRepository<Oggetto, Integer> {
     List<Oggetto> findByStatoAndTipoOpera(StatoOggetto stato, TipoOpera tipoOpera);
 
     // Unica eccezione con @Query — la randomica serve alla Facade
-    @Query("SELECT o FROM Oggetto o WHERE o.stato = 'DISPONIBILE' ORDER BY RAND()")
+    @Query("SELECT o " +
+            "FROM Oggetto o " +
+            "WHERE o.stato = 'DISPONIBILE' " +
+            "ORDER BY RAND()")
     List<Oggetto> findAllDisponibiliRandom();
+
+    //Query per le 5 opere random del gioco
+    @Query(value = """
+        SELECT *
+        FROM oggetti
+        WHERE stato = 'DISPONIBILE'
+        ORDER BY RAND()
+        LIMIT 5
+        """, nativeQuery = true)
+    List<Oggetto> findCinqueDisponibiliRandom();
 }

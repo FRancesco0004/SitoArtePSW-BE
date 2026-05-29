@@ -4,7 +4,6 @@ import com.example.sitoartepsaw.dto.request.AcquistoRequest;
 import com.example.sitoartepsaw.dto.request.VenditaRequest;
 import com.example.sitoartepsaw.dto.response.AzioneResponse;
 import com.example.sitoartepsaw.entity.Utente;
-import com.example.sitoartepsaw.repository.UtenteRepository;
 import com.example.sitoartepsaw.service.AzioneService;
 import com.example.sitoartepsaw.service.facade.VenditaFacade;
 import com.example.sitoartepsaw.service.facade.AcquistoFacade;

@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.sitoartepsaw.dto.request.AcquistoRequest;
 import com.example.sitoartepsaw.entity.Utente;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.time.LocalDateTime;
 
@@ -79,10 +80,20 @@ public class AzioneService {
             AcquistoRequest request,
             Utente utente
     ) {
+        return creaAzioneAcquisto(oggetto, request, utente, oggetto.getCosto());
+    }
+
+    @Transactional
+    public AzioneResponse creaAzioneAcquisto(
+            Oggetto oggetto,
+            AcquistoRequest request,
+            Utente utente,
+            BigDecimal prezzoPagato
+    ) {
         Azione azione = Azione.builder()
                 .data(LocalDateTime.now())
                 .tipoAzione(TipoAzione.COMPRA)
-                .prezzoAlMomento(oggetto.getCosto())
+                .prezzoAlMomento(prezzoPagato)
                 .metodoPagamento(request.getMetodoPagamento())
                 .annullata(false)
                 .utente(utente)
