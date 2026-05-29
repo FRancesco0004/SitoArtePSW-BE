@@ -110,7 +110,7 @@ Una volta avviato, i servizi saranno raggiungibili a questi indirizzi:
 ---
 
 ## Configurazione di Keycloak (Solo al primo avvio)
-Dato che il container di Keycloak parte da zero, è necessario configurare il Realm, il Client e i Ruoli. Invece di installare Keycloak sul PC, eseguiremo lo script direttamente all'interno del container in esecuzione.
+Dato che il container di Keycloak parte da zero, è necessario configurare il Realm, il Client e i Ruoli. Grazie ai volumi Docker, **questa operazione va fatta solo la prima volta**. Invece di installare Keycloak sul PC, eseguiremo lo script direttamente all'interno del container in esecuzione.
 
 **1. Entra nel terminale del container di Keycloak:**
 ```bash
@@ -149,6 +149,14 @@ cd /opt/keycloak/bin
 ./kcadm.sh create roles -r art-platform -s name=USER
 ./kcadm.sh create roles -r art-platform -s name=USER_VERIFICATO
 ```
+
+**5. Imposta il Frontend URL del realm:**
+Nelle impostazioni generali del realm `art-platform`, imposta il campo **Frontend URL** al seguente valore:
+```
+http://keycloak:8080
+```
+Questo consente al backend, che gira all'interno della rete Docker, di raggiungere Keycloak usando il nome del container anziché `localhost`.
+
 *(Digita `exit` per uscire dal terminale del container e tornare al tuo PC).*
 
 ### Assegnare un ruolo a un utente
@@ -170,4 +178,19 @@ Per fermare l'applicazione e liberare la memoria del sistema, posizionati nella 
 ```bash
 sudo docker compose down
 ```
-> I dati del database (e tutte le configurazioni di Keycloak che hai appena fatto) sono salvati in volumi permanenti e non andranno persi allo spegnimento. Al prossimo `docker compose up -d`, la piattaforma sarà già pronta all'uso!
+> I dati del database e tutte le configurazioni di Keycloak sono salvati in **volumi permanenti** (`db_data` e `keycloak_data`) e non andranno persi allo spegnimento. Al prossimo `docker compose up -d`, la piattaforma sarà già pronta all'uso!
+
+---
+
+## Risoluzione dei problemi (Troubleshooting)
+
+**Errore 500 (Internal Server Error) in fase di registrazione**
+Se chiamando l'endpoint `/api/utenti/registra` ricevi un errore 500, è molto probabile che il Backend non riesca a comunicare con Keycloak.
+Questo accade quasi sempre se:
+1. Hai dimenticato di eseguire lo script di configurazione iniziale di Keycloak descritto sopra (il realm `art-platform` non esiste).
+2. Le credenziali di Keycloak nel file `.env` non corrispondono a quelle inserite nel `docker-compose.yml`.
+
+Per capire esattamente cosa sta bloccando il backend, leggi gli ultimi 100 log con la relativa *stack trace* usando il comando:
+```bash
+sudo docker compose logs --tail=100 backend
+```

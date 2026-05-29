@@ -36,3 +36,4 @@ build/
 
 keycloak-24.0.4/
 keycloak.tar.gz
+.env
