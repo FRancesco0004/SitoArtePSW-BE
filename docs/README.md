@@ -159,6 +159,23 @@ Questo consente al backend, che gira all'interno della rete Docker, di raggiunge
 
 *(Digita `exit` per uscire dal terminale del container e tornare al tuo PC).*
 
+**6. Aggiungi le Web Origins al client (interfaccia grafica):**
+
+Per consentire al frontend Angular (che gira su `http://localhost:4200`) di comunicare correttamente con Keycloak, è necessario aggiungere la sua origine alla lista delle **Web Origins** del client tramite la console di amministrazione:
+
+1. Apri il browser e vai su `http://localhost:8180/admin`
+2. Accedi con le credenziali admin (`admin` / `admin`)
+3. Nel menu laterale, seleziona il realm **art-platform**
+4. Vai su **Clients** e clicca su **art-platform-client**
+5. Nella scheda **Settings**, individua il campo **Web origins**
+6. Aggiungi la seguente voce (oltre a quella già presente `http://keycloak:8080`):
+   ```
+   http://localhost:4200
+   ```
+7. Salva cliccando su **Save**
+
+> Senza questa configurazione, le richieste provenienti dal frontend Angular verranno bloccate dal browser con un errore CORS.
+
 ### Assegnare un ruolo a un utente
 Dopo che un utente si è registrato, puoi assegnargli un ruolo ripetendo l'accesso al container (`sudo docker exec -it app_keycloak bash`) ed eseguendo:
 
