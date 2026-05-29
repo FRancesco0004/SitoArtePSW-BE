@@ -146,6 +146,17 @@ public class UtenteService {
         return utenteMapper.toResponse(utente);
     }
 
+    @Transactional(readOnly = true)
+    public Utente getUtenteEntityByEmail(String email) {
+        return utenteRepository
+                .findByEmail(email)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utente con email " + email + " non trovato"
+                ));
+    }
+
     // Ottiene un token admin fresco ad ogni chiamata
     // Il token admin scade ogni 5 minuti quindi non si può salvare
     private String getAdminToken() {

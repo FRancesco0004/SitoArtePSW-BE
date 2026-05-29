@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.sitoartepsaw.dto.request.AcquistoRequest;
 import com.example.sitoartepsaw.entity.Utente;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.time.LocalDateTime;
 
@@ -27,35 +28,45 @@ public class AzioneService {
     private final AzioneRepository azioneRepository;
     private final OggettoRepository oggettoRepository;
     private final AzioneMapper azioneMapper;
+    private final UtenteService utenteService;
 
     @Transactional(readOnly = true)
-    public List<AzioneResponse> getStorico(Integer utenteId) {
+    public List<AzioneResponse> getStorico(String email) {
+        Utente utente = utenteService.getUtenteEntityByEmail(email);
         return azioneRepository
-                .findByUtenteId(utenteId)
+                .findByUtenteId(utente.getId())
                 .stream()
                 .map(azioneMapper::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public AzioneResponse getAzione(Integer azioneId, Integer utenteId) {
+    public AzioneResponse getAzione(Integer azioneId, String email) {
+        Utente utente = utenteService.getUtenteEntityByEmail(email);
+
         Azione azione = azioneRepository.findById(azioneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Azione non trovata"));
 
-        if (!azione.getUtente().getId().equals(utenteId)) {
-            throw new UnauthorizedActionException("Non puoi accedere a questa azione perché appartiene a un altro utente");
+        if (!azione.getUtente().getId().equals(utente.getId())) {
+            throw new UnauthorizedActionException(
+                    "Non puoi accedere a questa azione perché appartiene a un altro utente"
+            );
         }
 
         return azioneMapper.toResponse(azione);
     }
 
     @Transactional
-    public AzioneResponse annulla(Integer azioneId, Integer utenteId) {
+    public AzioneResponse annulla(Integer azioneId, String email) {
+        Utente utente = utenteService.getUtenteEntityByEmail(email);
+
         Azione azione = azioneRepository.findById(azioneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Azione non trovata"));
 
-        if (!azione.getUtente().getId().equals(utenteId)) {
-            throw new UnauthorizedActionException("Non puoi accedere a questa azione perché appartiene a un altro utente");
+        if (!azione.getUtente().getId().equals(utente.getId())) {
+            throw new UnauthorizedActionException(
+                    "Non puoi accedere a questa azione perché appartiene a un altro utente"
+            );
         }
 
         if (azione.getAnnullata()) {
@@ -73,16 +84,27 @@ public class AzioneService {
         return azioneMapper.toResponse(salvata);
     }
 
+    //overload del metodo per utilizzare lo sconto
     @Transactional
     public AzioneResponse creaAzioneAcquisto(
             Oggetto oggetto,
             AcquistoRequest request,
             Utente utente
     ) {
+        return creaAzioneAcquisto(oggetto, request, utente, oggetto.getCosto());
+    }
+
+    @Transactional
+    public AzioneResponse creaAzioneAcquisto(
+            Oggetto oggetto,
+            AcquistoRequest request,
+            Utente utente,
+            BigDecimal prezzoPagato
+    ) {
         Azione azione = Azione.builder()
                 .data(LocalDateTime.now())
                 .tipoAzione(TipoAzione.COMPRA)
-                .prezzoAlMomento(oggetto.getCosto())
+                .prezzoAlMomento(prezzoPagato)
                 .metodoPagamento(request.getMetodoPagamento())
                 .annullata(false)
                 .utente(utente)
