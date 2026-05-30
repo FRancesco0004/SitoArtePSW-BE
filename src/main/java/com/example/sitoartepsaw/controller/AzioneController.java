@@ -3,8 +3,6 @@ package com.example.sitoartepsaw.controller;
 import com.example.sitoartepsaw.dto.request.AcquistoRequest;
 import com.example.sitoartepsaw.dto.request.VenditaRequest;
 import com.example.sitoartepsaw.dto.response.AzioneResponse;
-import com.example.sitoartepsaw.entity.Utente;
-import com.example.sitoartepsaw.repository.UtenteRepository;
 import com.example.sitoartepsaw.service.AzioneService;
 import com.example.sitoartepsaw.service.facade.VenditaFacade;
 import com.example.sitoartepsaw.service.facade.AcquistoFacade;
@@ -14,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,28 +49,33 @@ public class AzioneController {
     }
 
     @GetMapping("/storico")
-    public ResponseEntity<List<AzioneResponse>> getStorico(
-            @AuthenticationPrincipal Utente utente
-    ) {
-        List<AzioneResponse> storico = azioneService.getStorico(utente.getId());
+    public ResponseEntity<List<AzioneResponse>> getStorico() {
+        String email = Utils.getEmail();
+
+        List<AzioneResponse> storico = azioneService.getStorico(email);
+
         return ResponseEntity.ok(storico);
     }
 
     @GetMapping("/storico/{id}")
     public ResponseEntity<AzioneResponse> getAzione(
-            @PathVariable Integer id,
-            @AuthenticationPrincipal Utente utente
+            @PathVariable Integer id
     ) {
-        AzioneResponse response = azioneService.getAzione(id, utente.getId());
+        String email = Utils.getEmail();
+
+        AzioneResponse response = azioneService.getAzione(id, email);
+
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/annulla/{id}")
     public ResponseEntity<AzioneResponse> annulla(
-            @PathVariable Integer id,
-            @AuthenticationPrincipal Utente utente
+            @PathVariable Integer id
     ) {
-        AzioneResponse response = azioneService.annulla(id, utente.getId());
+        String email = Utils.getEmail();
+
+        AzioneResponse response = azioneService.annulla(id, email);
+
         return ResponseEntity.ok(response);
     }
 }

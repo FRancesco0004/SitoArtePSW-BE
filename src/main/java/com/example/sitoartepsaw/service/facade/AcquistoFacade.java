@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Component
 @RequiredArgsConstructor
 public class AcquistoFacade {
@@ -49,19 +52,57 @@ public class AcquistoFacade {
             );
         }
 
+        BigDecimal prezzoFinale = calcolaPrezzoFinale(oggetto, request);
+
         PagamentoTemplate pagamento = pagamentoFactory.get(request.getMetodoPagamento());
 
-        pagamento.esegui(oggetto.getCosto(), utente);
+        pagamento.esegui(prezzoFinale, utente);
 
         oggetto.setStato(StatoOggetto.VENDUTO);
 
         oggettoRepository.save(oggetto);
 
-        AzioneResponse response = azioneService.creaAzioneAcquisto(oggetto, request, utente);
+        //Metodo aggiornato, prende il prezzo in caso di sconto ora
+        AzioneResponse response = azioneService.creaAzioneAcquisto(
+                oggetto,
+                request,
+                utente,
+                prezzoFinale
+        );
 
         acquistoSubject.notificaAcquisto(oggetto, utente);
 
         return response;
+    }
+
+    private BigDecimal calcolaPrezzoFinale(Oggetto oggetto, AcquistoRequest request) {
+        BigDecimal prezzoReale = oggetto.getCosto();
+
+        //Se non si gioca
+        if (request.getPrezzoStimato() == null) {
+            return prezzoReale;
+        }
+
+        BigDecimal prezzoStimato = request.getPrezzoStimato();
+
+        //scarto dal prezzo reale
+        BigDecimal differenza = prezzoReale.subtract(prezzoStimato).abs();
+
+        BigDecimal rangeAccettato = prezzoReale.multiply(new BigDecimal("0.05"));
+
+        //se lo scarto è <= 0 la guess è corretta
+        boolean guessCorretta = differenza.compareTo(rangeAccettato) <= 0;
+
+        if (!guessCorretta) {return prezzoReale;
+        }
+
+        //Da qui controlliamo di quanto scontare in caso di vincita
+        final BigDecimal scontoApplicato = new BigDecimal("0.05");
+        BigDecimal importoSconto = prezzoReale.multiply(scontoApplicato);
+
+        //il prezzo finale è il prezzo totale - lo sconto
+        // (teniamo solo due cifre dopo la virgola, arrotondando in eccesso)
+        return prezzoReale.subtract(importoSconto).setScale(2, RoundingMode.HALF_UP);
     }
 
 }
