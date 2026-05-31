@@ -5,12 +5,14 @@ import com.example.sitoartepsaw.dto.response.UtenteResponse;
 import com.example.sitoartepsaw.entity.Utente;
 import com.example.sitoartepsaw.mapper.UtenteMapper;
 import com.example.sitoartepsaw.repository.UtenteRepository;
-import com.example.sitoartepsaw.support.exceptions.ConflictException;
 import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -42,7 +44,7 @@ public class UtenteService {
         // Crea utente su Keycloak via REST API
         creaUtenteKeycloak(request);
 
-        // Salva nel DB senza password — la gestisce Keycloak
+        // Salva nel DB SENZA PASSWORD
         Utente utente = utenteMapper.toEntity(request);
         Utente salvato = utenteRepository.save(utente);
 
@@ -61,34 +63,33 @@ public class UtenteService {
         return utenteMapper.toResponse(utente);
     }
 
+    // faremo una SOFT DELETE nel db mentre una HARD DELETE nel server keycloack
     @Transactional
     public void cancellaAccount(String email) {
-
         Utente utente = utenteRepository
                 .findByEmail(email)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Utente non trovato"));
+                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
 
-        // Anonimizza i dati personali secondo il GDPR
-        String uuid = UUID.randomUUID().toString();
+        eliminaUtenteKeycloak(email);
+
+        String shortUuid = UUID.randomUUID().toString().substring(0, 8);
+        String fintaEmail = "del_" + shortUuid + "@del.com";
+
         utente.setNome("Utente");
         utente.setCognome("Cancellato");
-        utente.setEmail("deleted_" + uuid + "@deleted.com");
+        utente.setEmail(fintaEmail);
         utente.setAttivo(false);
-        utenteRepository.save(utente);
 
-        // Disabilita su Keycloak
-        disabilitaUtenteKeycloak(email);
+        utenteRepository.save(utente);
     }
 
-    private void disabilitaUtenteKeycloak(String email) {
+    private void eliminaUtenteKeycloak(String email) {
         try {
             String adminToken = getAdminToken();
             HttpClient client = HttpClient.newHttpClient();
 
-            // Trova l'id utente su Keycloak tramite email
             HttpRequest findRequest = HttpRequest.newBuilder()
                     .uri(URI.create(keycloakServerUrl
                             + "/admin/realms/" + realm
@@ -102,30 +103,34 @@ public class UtenteService {
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            // Estraiamo l'id dal JSON
-            String userId = findResponse.body()
-                    .split("\"id\":\"")[1]
-                    .split("\"")[0];
+            String responseBody = findResponse.body();
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootArray = mapper.readTree(responseBody);
 
-            String body = "{\"enabled\": false}";
+            if (!rootArray.isArray() || rootArray.isEmpty()) {
+                throw new RuntimeException("Utente non trovato su Keycloak con email: " + email);
+            }
 
-            HttpRequest disableRequest = HttpRequest.newBuilder()
+            String userId = rootArray.get(0).get("id").asText();
+
+            // ELIMINAZIONE ACCOUNT
+            HttpRequest deleteRequest = HttpRequest.newBuilder()
                     .uri(URI.create(keycloakServerUrl
                             + "/admin/realms/" + realm
                             + "/users/" + userId))
-                    .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + adminToken)
-                    .PUT(HttpRequest.BodyPublishers.ofString(body))
+                    .DELETE()
                     .build();
 
-            HttpResponse<String> disableResponse = client.send(
-                    disableRequest,
+            HttpResponse<String> deleteResponse = client.send(
+                    deleteRequest,
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (disableResponse.statusCode() != 204) {
-                throw new RuntimeException("Errore disabilitazione utente su Keycloak: "
-                        + disableResponse.body());
+            // Keycloak restituisce 204 No Content in caso di eliminazione avvenuta con successo
+            if (deleteResponse.statusCode() < 200 || deleteResponse.statusCode() >= 300) {
+                throw new RuntimeException("Errore eliminazione utente su Keycloak: "
+                        + deleteResponse.body());
             }
 
         } catch (RuntimeException e) {

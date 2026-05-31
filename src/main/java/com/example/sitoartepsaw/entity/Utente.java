@@ -36,8 +36,8 @@ public class Utente{
     private String cognome;
 
     @Basic
-    @NaturalId
-    @Column(name = "email", unique = true, nullable = false, length = 255)
+    @NaturalId(mutable = true)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
     @Builder.Default
