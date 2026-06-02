@@ -2,7 +2,6 @@
 
 Ci serviranno solamente 3 mapper dal momento che i DTO che dovranno comunicare con le Entity saranno solo:
 * (SI) Registrazione Request -> Utente
-* (NO) Login Request -> non deve essere mappato, deve comunicare solo con i service
 * (NO) Acquisto Request -> deve comunicare solo con i service
 * (NO) Prezzo Ipotizzato Request -> anche lui solo con i service
 * (SI) Utente Response -> Utente

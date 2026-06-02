@@ -2,6 +2,7 @@ package com.example.sitoartepsaw.mapper;
 
 import com.example.sitoartepsaw.dto.response.OggettoAnteprimaResponse;
 import com.example.sitoartepsaw.dto.response.OggettoDettaglioResponse;
+import com.example.sitoartepsaw.dto.response.OggettoGiocoResponse;
 import com.example.sitoartepsaw.entity.Oggetto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,6 +18,10 @@ public interface OggettoMapper {
     @Mapping(source = "autore.nome", target = "nomeAutore")
     @Mapping(source = "autore.cognome", target = "cognomeAutore")
     OggettoDettaglioResponse toDettaglioResponse(Oggetto oggetto);
+
+    @Mapping(source = "autore.nome", target = "nomeAutore")
+    @Mapping(source = "autore.cognome", target = "cognomeAutore")
+    OggettoGiocoResponse toGiocoResponse(Oggetto oggetto);
 
     /*
      public OggettoAnteprimaResponse toAnteprimaResponse(Oggetto oggetto) {
