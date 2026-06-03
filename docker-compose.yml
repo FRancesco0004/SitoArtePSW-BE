@@ -45,6 +45,8 @@ services:
     depends_on:
       - db
       - keycloak
+    volumes:
+      - /home/frank2/immaginiprogetto:/app/immagini
 
 volumes:
   db_data:
