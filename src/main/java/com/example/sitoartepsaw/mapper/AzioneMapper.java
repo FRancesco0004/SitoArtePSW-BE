@@ -10,20 +10,6 @@ public interface AzioneMapper {
 
     @Mapping(source = "oggetto.titolo", target = "titoloOggetto")
     @Mapping(source = "utente.email", target = "emailUtente")
+    @Mapping(source = "scontoApplicato", target = "scontoApplicato")
     AzioneResponse toResponse(Azione azione);
-
-    /*
-     public AzioneResponse toResponse(Azione azione) {
-         return AzioneResponse.builder()
-             .id(azione.getId())
-             .data(azione.getData())
-             .tipoAzione(azione.getTipoAzione())
-             .prezzoAlMomento(azione.getPrezzoAlMomento())
-             .metodoPagamento(azione.getMetodoPagamento())
-             .annullata(azione.getAnnullata())
-             .titoloOggetto(azione.getOggetto().getTitolo())
-             .emailUtente(azione.getUtente().getEmail())
-             .build();
-     }
-     */
 }

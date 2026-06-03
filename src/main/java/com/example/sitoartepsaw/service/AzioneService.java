@@ -1,8 +1,10 @@
 package com.example.sitoartepsaw.service;
 
+import com.example.sitoartepsaw.dto.request.AcquistoRequest;
 import com.example.sitoartepsaw.dto.response.AzioneResponse;
 import com.example.sitoartepsaw.entity.Azione;
 import com.example.sitoartepsaw.entity.Oggetto;
+import com.example.sitoartepsaw.entity.Utente;
 import com.example.sitoartepsaw.enums.StatoOggetto;
 import com.example.sitoartepsaw.enums.TipoAzione;
 import com.example.sitoartepsaw.mapper.AzioneMapper;
@@ -14,12 +16,10 @@ import com.example.sitoartepsaw.support.exceptions.UnauthorizedActionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.sitoartepsaw.dto.request.AcquistoRequest;
-import com.example.sitoartepsaw.entity.Utente;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +33,7 @@ public class AzioneService {
     @Transactional(readOnly = true)
     public List<AzioneResponse> getStorico(String email) {
         Utente utente = utenteService.getUtenteEntityByEmail(email);
+
         return azioneRepository
                 .findByUtenteId(utente.getId())
                 .stream()
@@ -80,18 +81,10 @@ public class AzioneService {
         }
 
         azione.setAnnullata(true);
-        Azione salvata = azioneRepository.save(azione);
-        return azioneMapper.toResponse(salvata);
-    }
 
-    //overload del metodo per utilizzare lo sconto
-    @Transactional
-    public AzioneResponse creaAzioneAcquisto(
-            Oggetto oggetto,
-            AcquistoRequest request,
-            Utente utente
-    ) {
-        return creaAzioneAcquisto(oggetto, request, utente, oggetto.getCosto());
+        Azione salvata = azioneRepository.save(azione);
+
+        return azioneMapper.toResponse(salvata);
     }
 
     @Transactional
@@ -99,7 +92,8 @@ public class AzioneService {
             Oggetto oggetto,
             AcquistoRequest request,
             Utente utente,
-            BigDecimal prezzoPagato
+            BigDecimal prezzoPagato,
+            Boolean scontoApplicato
     ) {
         Azione azione = Azione.builder()
                 .data(LocalDateTime.now())
@@ -107,6 +101,7 @@ public class AzioneService {
                 .prezzoAlMomento(prezzoPagato)
                 .metodoPagamento(request.getMetodoPagamento())
                 .annullata(false)
+                .scontoApplicato(Boolean.TRUE.equals(scontoApplicato))
                 .utente(utente)
                 .oggetto(oggetto)
                 .build();
@@ -127,6 +122,7 @@ public class AzioneService {
                 .prezzoAlMomento(oggetto.getCosto())
                 .metodoPagamento(null)
                 .annullata(false)
+                .scontoApplicato(false)
                 .utente(utente)
                 .oggetto(oggetto)
                 .build();

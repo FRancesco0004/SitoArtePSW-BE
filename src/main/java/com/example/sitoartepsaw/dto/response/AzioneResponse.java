@@ -14,6 +14,8 @@ public class AzioneResponse {
     private TipoAzione tipoAzione;
     private BigDecimal prezzoAlMomento;
     private MetodoPagamento metodoPagamento;
+    //serve al FE per segnalare se si è vinta la sfida
+    private Boolean scontoApplicato;
     private Boolean annullata;
     private String titoloOggetto;
     private String emailUtente;

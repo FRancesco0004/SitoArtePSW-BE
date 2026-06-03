@@ -52,57 +52,61 @@ public class AcquistoFacade {
             );
         }
 
-        BigDecimal prezzoFinale = calcolaPrezzoFinale(oggetto, request);
-
+        boolean scontoApplicato = isScontoApplicato(oggetto, request);
+        BigDecimal prezzoFinale = calcolaPrezzoFinale(oggetto, request, scontoApplicato);
         PagamentoTemplate pagamento = pagamentoFactory.get(request.getMetodoPagamento());
 
         pagamento.esegui(prezzoFinale, utente);
 
         oggetto.setStato(StatoOggetto.VENDUTO);
-
         oggettoRepository.save(oggetto);
 
-        //Metodo aggiornato, prende il prezzo in caso di sconto ora
         AzioneResponse response = azioneService.creaAzioneAcquisto(
                 oggetto,
                 request,
                 utente,
-                prezzoFinale
+                prezzoFinale,
+                scontoApplicato
+
         );
+
+        response.setScontoApplicato(scontoApplicato);
 
         acquistoSubject.notificaAcquisto(oggetto, utente);
 
         return response;
     }
 
-    private BigDecimal calcolaPrezzoFinale(Oggetto oggetto, AcquistoRequest request) {
+    private boolean isScontoApplicato(Oggetto oggetto, AcquistoRequest request) {
+        if (request.getPrezzoStimato() == null) {
+            return false;
+        }
+
+        BigDecimal prezzoReale = oggetto.getCosto();
+        BigDecimal prezzoStimato = request.getPrezzoStimato();
+
+        BigDecimal differenza = prezzoReale.subtract(prezzoStimato).abs();
+        BigDecimal rangeAccettato = prezzoReale.multiply(new BigDecimal("0.05"));
+
+        return differenza.compareTo(rangeAccettato) <= 0;
+    }
+
+    private BigDecimal calcolaPrezzoFinale(
+            Oggetto oggetto,
+            AcquistoRequest request,
+            boolean scontoApplicato
+    ) {
         BigDecimal prezzoReale = oggetto.getCosto();
 
-        //Se non si gioca
-        if (request.getPrezzoStimato() == null) {
+        if (request.getPrezzoStimato() == null || !scontoApplicato) {
             return prezzoReale;
         }
 
-        BigDecimal prezzoStimato = request.getPrezzoStimato();
+        BigDecimal sconto = new BigDecimal("0.05");
+        BigDecimal importoSconto = prezzoReale.multiply(sconto);
 
-        //scarto dal prezzo reale
-        BigDecimal differenza = prezzoReale.subtract(prezzoStimato).abs();
-
-        BigDecimal rangeAccettato = prezzoReale.multiply(new BigDecimal("0.05"));
-
-        //se lo scarto è <= 0 la guess è corretta
-        boolean guessCorretta = differenza.compareTo(rangeAccettato) <= 0;
-
-        if (!guessCorretta) {return prezzoReale;
-        }
-
-        //Da qui controlliamo di quanto scontare in caso di vincita
-        final BigDecimal scontoApplicato = new BigDecimal("0.05");
-        BigDecimal importoSconto = prezzoReale.multiply(scontoApplicato);
-
-        //il prezzo finale è il prezzo totale - lo sconto
-        // (teniamo solo due cifre dopo la virgola, arrotondando in eccesso)
-        return prezzoReale.subtract(importoSconto).setScale(2, RoundingMode.HALF_UP);
+        return prezzoReale
+                .subtract(importoSconto)
+                .setScale(2, RoundingMode.HALF_UP);
     }
-
 }
