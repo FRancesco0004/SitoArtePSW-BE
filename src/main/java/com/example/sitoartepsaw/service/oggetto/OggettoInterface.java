@@ -1,4 +1,4 @@
-package com.example.sitoartepsaw.service;
+package com.example.sitoartepsaw.service.oggetto;
 
 import com.example.sitoartepsaw.dto.request.VenditaRequest;
 import com.example.sitoartepsaw.entity.Autore;

@@ -1,21 +1,20 @@
 ```mermaid
 erDiagram
-    AZIONE ||--o| COMPRA : "GENERALIZZAZIONE"
-    AZIONE ||--o| VENDE : "GENERALIZZAZIONE"
     UTENTE ||--o| VERIFICATO : "ISA"
-    OGGETTO ||--o| DIPINTO : "GENERALIZZAZIONE"
-    OGGETTO ||--o| SCULTURA : "GENERALIZZAZIONE"
-
-    UTENTE ||--o{ COMPRA : "effettua (0:N - 1:1)"
-    VERIFICATO ||--o{ VENDE : "effettua (0:N - 1:1)"
+    UTENTE ||--o{ AZIONE : "effettua (0:N - 1:1)"
     AZIONE }o--|| OGGETTO : "riguarda (0:N - 1:1)"
     AUTORE ||--o{ OGGETTO : "crea (0:N - 0:1)"
     AUTORE |o--o| VERIFICATO : "corrisponde a (0:1 - 0:1)"
+
+%% Generalizzazioni logiche (Single Table nel DB)
+    OGGETTO ||--o| DIPINTO : "tipo_opera=DIPINTO"
+    OGGETTO ||--o| SCULTURA : "tipo_opera=SCULTURA"
 
     AUTORE {
         int id PK
         string nome
         string cognome
+        int utente_verificato_id FK "UNIQUE"
     }
     OGGETTO {
         int id PK
@@ -24,29 +23,39 @@ erDiagram
         int anno
         float costo
         string grandezza
-        string linkImmagine
+        int version
+        string link_immagine
+        string tipo_opera "ENUM"
+        float peso
+        string stato "ENUM"
+        int autore_id FK
     }
     SCULTURA {
-        float peso
+    %% Entità logica, dati in OGGETTO
     }
     DIPINTO {
+    %% Entità logica, dati in OGGETTO
     }
     UTENTE {
         int id PK
         string nome
         string cognome
         string email
-        String password
+        boolean attivo
     }
     VERIFICATO {
+        int utente_id PK, FK
         string titolo
     }
     AZIONE {
         int id PK
-        date data
-    }
-    COMPRA {
-    }
-    VENDE {
+        datetime data
+        string tipo_azione "ENUM"
+        float prezzo_al_momento
+        boolean sconto_applicato
+        string metodo_pagamento "ENUM"
+        boolean annullata
+        int utente_id FK
+        int oggetto_id FK
     }
 ```
