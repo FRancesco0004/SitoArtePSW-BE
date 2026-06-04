@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,22 @@ public class AzioneController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping("/debug-authorities")
+    public ResponseEntity<List<String>> debugAuthorities(
+            org.springframework.security.core.Authentication authentication
+    ) {
+        List<String> authorities = authentication.getAuthorities()
+                .stream()
+                .map(authority -> authority.getAuthority())
+                .toList();
+
+        System.out.println("AUTHORITIES BACKEND:");
+        authorities.forEach(System.out::println);
+
+        return ResponseEntity.ok(authorities);
+    }
+
+    @PreAuthorize("hasRole('USER_VERIFICATO')")
     @PostMapping("/vendi")
     public ResponseEntity<AzioneResponse> vendi(
             @Valid @RequestBody VenditaRequest request

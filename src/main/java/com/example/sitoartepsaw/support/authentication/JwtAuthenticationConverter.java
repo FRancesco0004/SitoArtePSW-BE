@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.stereotype.Component;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -19,43 +20,93 @@ import java.util.stream.Stream;
 @Component
 public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
-    // Converter standard di Spring per estrarre i ruoli dal realm_access del token Keycloak
+    // Converter standard di Spring per estrarre gli scope dal token JWT
+    // Esempio: SCOPE_email, SCOPE_profile
     private final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter =
             new JwtGrantedAuthoritiesConverter();
 
-    // Converte il token JWT di Keycloak in un oggetto Spring Security
-    // combinando i ruoli del realm con i ruoli delle risorse
+    // Converte il token JWT di Keycloak in un oggetto Spring Security,
+    // combinando scope standard, ruoli di realm e ruoli delle risorse.
+    // In questo modo @PreAuthorize può controllare correttamente i ruoli dell'utente.
     @Override
     public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
-        Collection<GrantedAuthority> authorities = Stream.concat(
-                jwtGrantedAuthoritiesConverter.convert(jwt).stream(),
-                extractResourceRoles(jwt).stream()
-        ).collect(Collectors.toSet());
+        Collection<GrantedAuthority> scopeAuthorities =
+                jwtGrantedAuthoritiesConverter.convert(jwt);
+
+        Collection<GrantedAuthority> realmAuthorities =
+                extractRealmRoles(jwt);
+
+        Collection<GrantedAuthority> resourceAuthorities =
+                extractResourceRoles(jwt);
+
+        Collection<GrantedAuthority> authorities = Stream
+                .of(scopeAuthorities, realmAuthorities, resourceAuthorities)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
 
         return new JwtAuthenticationToken(jwt, authorities, getPrincipleClaimName(jwt));
     }
 
-    // Estrae i ruoli dalla sezione resource_access del token
-    private Collection<GrantedAuthority> extractResourceRoles(Jwt jwt) {
-        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+    // Estrae i ruoli dalla sezione realm_access del token Keycloak.
+    // Esempio: USER, USER_VERIFICATO.
+    // Ogni ruolo viene trasformato in ROLE_<ruolo> perché hasRole(...) di Spring
+    // cerca authorities con prefisso ROLE_.
+    private Collection<GrantedAuthority> extractRealmRoles(Jwt jwt) {
+        Map<String, Object> realmAccess = jwt.getClaim("realm_access");
 
-        if (resourceAccess == null) return Set.of();
+        if (realmAccess == null) {
+            return Set.of();
+        }
 
-        Map<String, Object> resource = (Map<String, Object>) resourceAccess.get("art-platform-client");
+        Object rolesObject = realmAccess.get("roles");
 
-        if (resource == null) return Set.of();
+        if (!(rolesObject instanceof Collection<?> roles)) {
+            return Set.of();
+        }
 
-        List<String> resourceRoles = (List<String>) resource.get("roles");
-
-        if (resourceRoles == null) return Set.of();
-
-        return resourceRoles.stream()
+        return roles.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toSet());
     }
 
-    // Usa l'email come identificatore principale dell'utente
+    // Estrae eventuali ruoli dalla sezione resource_access del token Keycloak,
+    // relativi al client dell'applicazione.
+    // Anche questi vengono trasformati in ROLE_<ruolo>.
+    private Collection<GrantedAuthority> extractResourceRoles(Jwt jwt) {
+        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+
+        if (resourceAccess == null) {
+            return Set.of();
+        }
+
+        Object resourceObject = resourceAccess.get("art-platform-client");
+
+        if (!(resourceObject instanceof Map<?, ?> resource)) {
+            return Set.of();
+        }
+
+        Object rolesObject = resource.get("roles");
+
+        if (!(rolesObject instanceof Collection<?> roles)) {
+            return Set.of();
+        }
+
+        return roles.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .collect(Collectors.toSet());
+    }
+
     private String getPrincipleClaimName(Jwt jwt) {
-        return jwt.getClaim("email");
+        String email = jwt.getClaim("email");
+
+        if (email != null && !email.isBlank()) {
+            return email;
+        }
+
+        return jwt.getSubject();
     }
 }
