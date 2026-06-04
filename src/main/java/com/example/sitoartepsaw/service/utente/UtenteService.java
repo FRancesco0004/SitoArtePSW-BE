@@ -1,4 +1,4 @@
-package com.example.sitoartepsaw.service;
+package com.example.sitoartepsaw.service.utente;
 
 import com.example.sitoartepsaw.dto.request.RegistrazioneRequest;
 import com.example.sitoartepsaw.dto.response.UtenteResponse;

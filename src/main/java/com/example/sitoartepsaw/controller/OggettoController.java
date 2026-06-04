@@ -3,7 +3,7 @@ package com.example.sitoartepsaw.controller;
 import com.example.sitoartepsaw.dto.response.OggettoAnteprimaResponse;
 import com.example.sitoartepsaw.dto.response.OggettoDettaglioResponse;
 import com.example.sitoartepsaw.dto.response.OggettoGiocoResponse;
-import com.example.sitoartepsaw.service.OggettoService;
+import com.example.sitoartepsaw.service.oggetto.OggettoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

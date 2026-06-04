@@ -1,4 +1,4 @@
-package com.example.sitoartepsaw.service.observer;
+package com.example.sitoartepsaw.service.compravendita.observer;
 
 import com.example.sitoartepsaw.entity.Azione;
 import com.example.sitoartepsaw.entity.Oggetto;

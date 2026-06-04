@@ -1,4 +1,4 @@
-package com.example.sitoartepsaw.service.facade;
+package com.example.sitoartepsaw.service.compravendita.facade;
 
 import com.example.sitoartepsaw.dto.request.AcquistoRequest;
 import com.example.sitoartepsaw.dto.response.AzioneResponse;
@@ -7,9 +7,9 @@ import com.example.sitoartepsaw.entity.Utente;
 import com.example.sitoartepsaw.enums.StatoOggetto;
 import com.example.sitoartepsaw.repository.OggettoRepository;
 import com.example.sitoartepsaw.repository.UtenteRepository;
-import com.example.sitoartepsaw.service.AzioneService;
-import com.example.sitoartepsaw.service.observer.AcquistoSubject;
-import com.example.sitoartepsaw.service.payment.paymentFactory.PagamentoFactory;
+import com.example.sitoartepsaw.service.azione.AzioneService;
+import com.example.sitoartepsaw.service.compravendita.observer.AcquistoSubject;
+import com.example.sitoartepsaw.service.payment.PagamentoFactory;
 import com.example.sitoartepsaw.service.payment.PagamentoTemplate;
 import com.example.sitoartepsaw.support.exceptions.ConflictException;
 import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;

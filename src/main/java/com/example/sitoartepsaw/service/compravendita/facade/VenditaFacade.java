@@ -1,4 +1,4 @@
-package com.example.sitoartepsaw.service.facade;
+package com.example.sitoartepsaw.service.compravendita.facade;
 
 import com.example.sitoartepsaw.dto.request.VenditaRequest;
 import com.example.sitoartepsaw.dto.response.AzioneResponse;
@@ -9,8 +9,8 @@ import com.example.sitoartepsaw.repository.AutoreRepository;
 import com.example.sitoartepsaw.repository.OggettoRepository;
 import com.example.sitoartepsaw.repository.UtenteRepository;
 import com.example.sitoartepsaw.repository.UtenteVerificatoRepository;
-import com.example.sitoartepsaw.service.AzioneService;
-import com.example.sitoartepsaw.service.oggettoFactory.OggettoFactory;
+import com.example.sitoartepsaw.service.azione.AzioneService;
+import com.example.sitoartepsaw.service.oggetto.OggettoFactory;
 import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import com.example.sitoartepsaw.support.exceptions.UnauthorizedActionException;
 import lombok.RequiredArgsConstructor;

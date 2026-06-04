@@ -1,4 +1,4 @@
-package com.example.sitoartepsaw.service;
+package com.example.sitoartepsaw.service.azione;
 
 import com.example.sitoartepsaw.dto.request.AcquistoRequest;
 import com.example.sitoartepsaw.dto.response.AzioneResponse;
@@ -10,6 +10,7 @@ import com.example.sitoartepsaw.enums.TipoAzione;
 import com.example.sitoartepsaw.mapper.AzioneMapper;
 import com.example.sitoartepsaw.repository.AzioneRepository;
 import com.example.sitoartepsaw.repository.OggettoRepository;
+import com.example.sitoartepsaw.service.utente.UtenteService;
 import com.example.sitoartepsaw.support.exceptions.ConflictException;
 import com.example.sitoartepsaw.support.exceptions.ResourceNotFoundException;
 import com.example.sitoartepsaw.support.exceptions.UnauthorizedActionException;
