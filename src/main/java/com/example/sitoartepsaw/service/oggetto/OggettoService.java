@@ -1,4 +1,4 @@
-package com.example.sitoartepsaw.service;
+package com.example.sitoartepsaw.service.oggetto;
 
 import com.example.sitoartepsaw.dto.response.OggettoAnteprimaResponse;
 import com.example.sitoartepsaw.dto.response.OggettoDettaglioResponse;

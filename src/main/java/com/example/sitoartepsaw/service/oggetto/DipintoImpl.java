@@ -1,13 +1,13 @@
-package com.example.sitoartepsaw.service;
+package com.example.sitoartepsaw.service.oggetto;
 
 import com.example.sitoartepsaw.enums.TipoOpera;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SculturaImpl implements OggettoInterface {
+public class DipintoImpl implements OggettoInterface {
 
     @Override
     public TipoOpera getTipoOpera() {
-        return TipoOpera.SCULTURA;
+        return TipoOpera.DIPINTO;
     }
 }

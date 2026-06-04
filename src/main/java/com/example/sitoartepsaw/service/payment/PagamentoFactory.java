@@ -1,7 +1,6 @@
-package com.example.sitoartepsaw.service.payment.paymentFactory;
+package com.example.sitoartepsaw.service.payment;
 
 import com.example.sitoartepsaw.enums.MetodoPagamento;
-import com.example.sitoartepsaw.service.payment.*;
 import com.example.sitoartepsaw.support.exceptions.BadRequestException;
 import org.springframework.stereotype.Component;
 

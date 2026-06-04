@@ -1,10 +1,9 @@
-package com.example.sitoartepsaw.service.oggettoFactory;
+package com.example.sitoartepsaw.service.oggetto;
 
 import com.example.sitoartepsaw.dto.request.VenditaRequest;
 import com.example.sitoartepsaw.entity.Autore;
 import com.example.sitoartepsaw.entity.Oggetto;
 import com.example.sitoartepsaw.enums.TipoOpera;
-import com.example.sitoartepsaw.service.OggettoInterface;
 import com.example.sitoartepsaw.support.exceptions.BadRequestException;
 import org.springframework.stereotype.Component;
 

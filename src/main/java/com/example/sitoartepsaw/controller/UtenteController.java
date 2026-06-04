@@ -2,7 +2,7 @@ package com.example.sitoartepsaw.controller;
 
 import com.example.sitoartepsaw.dto.request.RegistrazioneRequest;
 import com.example.sitoartepsaw.dto.response.UtenteResponse;
-import com.example.sitoartepsaw.service.UtenteService;
+import com.example.sitoartepsaw.service.utente.UtenteService;
 import com.example.sitoartepsaw.support.Utils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
