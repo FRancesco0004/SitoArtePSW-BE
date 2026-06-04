@@ -97,8 +97,10 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+        ex.printStackTrace();
+
         return buildErrorResponse(
-                "Errore interno del server",
+                ex.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 request
         );

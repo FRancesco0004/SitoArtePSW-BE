@@ -74,9 +74,21 @@ public class AzioneService {
             throw new ConflictException("L'azione con id " + azioneId + " è già stata annullata");
         }
 
+        Oggetto oggetto = azione.getOggetto();
+
         if (azione.getTipoAzione().equals(TipoAzione.COMPRA)) {
-            Oggetto oggetto = azione.getOggetto();
             oggetto.setStato(StatoOggetto.DISPONIBILE);
+            oggettoRepository.save(oggetto);
+        }
+
+        if (azione.getTipoAzione().equals(TipoAzione.VENDE)) {
+            if (oggetto.getStato().equals(StatoOggetto.VENDUTO)) {
+                throw new ConflictException(
+                        "Non puoi annullare la vendita perché l'opera è già stata acquistata"
+                );
+            }
+
+            oggetto.setStato(StatoOggetto.RITIRATO);
             oggettoRepository.save(oggetto);
         }
 
