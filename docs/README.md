@@ -22,7 +22,7 @@ La comunicazione tra Frontend e Backend passa per i DTO (Data Transfer Object). 
 
 ### Come gestiamo i comportamenti
 
-Al checkout l'utente può pagare con PayPal, Revolut, P2P o Bonifico: i metodi nelle classi sono gli stessi, cambia solo l'API del servizio di pagamento, e qui entra in gioco il Template Method. Le opere hanno poi una loro "vita": nascono `DISPONIBILE`, passano per `IN_VALUTAZIONE` quando qualcuno sta tentando l'acquisto, e arrivano a `VENDUTO`; il pattern State gestisce questa progressione.
+Al checkout l'utente può pagare con PayPal, Revolut, P2P o Bonifico: i metodi nelle classi sono gli stessi, cambia solo l'API del servizio di pagamento, e qui entra in gioco il Template Method. Le opere hanno poi una loro "vita": nascono `DISPONIBILE`,e arrivano a `VENDUTO`, passando per `RITIRATO` se viene annullata l'operazione di vendita; il pattern State gestisce questa progressione.
 
 Ogni acquisto e ogni vendita viene incapsulato in un oggetto Command (`CompraCMD`, `VendeCMD`), il che ci dà due cose: uno storico completo delle transazioni e la possibilità di annullare un'operazione recente. Infine, quando un acquisto va a buon fine, il servizio di pagamento lancia una notifica asincrona a tutti gli "osservatori" registrati tramite il pattern Observer: l'acquirente riceve la ricevuta via email, il venditore viene avvisato.
 
