@@ -1,21 +1,10 @@
-# Arte per chi la sa valutare
-
-Questa piattaforma unisce il mercato dell'arte a una meccanica di gioco semplice ma coinvolgente: **puoi acquistare un'opera solo se riesci ad indovinarne (o avvicinarti abbastanza a) il suo valore reale**. Chi ha l'occhio fino compra. Gli altri si allenano.
-
-Gli utenti verificati possono sia mettere in vendita che acquistare. Gli utenti standard possono tentare la fortuna — e affinare il proprio gusto.
-
----
-
 ## Come è costruita l'applicazione
 
-Il progetto è sviluppato in **Spring Boot** e segue un'architettura a livelli classica: ogni parte ha il suo ruolo preciso, e nessuna si intromette nel lavoro delle altre.
+Il progetto è sviluppato in Spring Boot e segue un'architettura a livelli classica: ogni parte ha il suo ruolo preciso e non si intromette nel lavoro delle altre.
 
 Client ↔ Controller ↔ Service ↔ Repository ↔ Database
 
-- **Entity** — gli oggetti che vivono nel database
-- **Repository** — parla con il DB
-- **Service** — qui risiede tutta la logica di business
-- **Controller** — espone le API REST
+Scendendo nel dettaglio: le Entity sono gli oggetti che vivono nel database; il Repository ci parla direttamente; nel Service risiede tutta la logica di business; il Controller espone le API REST verso l'esterno.
 
 ---
 
@@ -25,29 +14,17 @@ Per tenere il codice pulito, scalabile ed evolvibile abbiamo adottato alcuni Des
 
 ### Come creiamo gli oggetti
 
-**Factory Method** — Quando si aggiunge un'opera la Factory decide quale oggetto istanziare in base al tipo ricevuto, rappresentato da un'enum (`TipoOpera.DIPINTO` / `TipoOpera.SCULTURA`).
-
-**Builder** — Invece di un costruttore con dieci parametri che nessuno ricorda in quale ordine vadano, usiamo il Builder attraverso la notazione `@Builder` di Lombok.
+Per la creazione degli oggetti usiamo il Factory Method: quando si aggiunge un'opera, la Factory decide quale istanziare in base al tipo ricevuto, rappresentato da un'enum (`TipoOpera.DIPINTO` / `TipoOpera.SCULTURA`). Per i costruttori invece usiamo il Builder tramite la notazione `@Builder` di Lombok, perché nessuno ricorda mai in quale ordine vadano dieci parametri.
 
 ### Come colleghiamo i pezzi
 
-**DTO (Data Transfer Object)** — Per la comunicazione tra Frontend e Backend.
-
-**Facade** — La usiamo così da poter astrarre tutto il processo di controllo del prezzo corretto ed acquisto.
-
-**Proxy** — Usato in due modi distinti:
-- *Protection Proxy* (tramite Spring Security): controlla che solo gli utenti verificati possano mettere in vendita un'opera.
-- *Virtual Proxy*: le immagini delle opere vengono caricate solo quando la vista le richiede davvero.
+La comunicazione tra Frontend e Backend passa per i DTO (Data Transfer Object). Abbiamo usato anche la Facade per astrarre tutto il processo di controllo del prezzo e acquisto; e il Proxy in due modi: il "Protection Proxy" (tramite Spring Security) controlla che solo gli utenti verificati possano mettere in vendita un'opera, mentre il "Virtual Proxy" fa sì che le immagini vengano caricate solo quando la vista le richiede davvero.
 
 ### Come gestiamo i comportamenti
 
-**Template Method** — Al checkout, l'utente può pagare con PayPal, Revolut, P2P o Bonifico. I metodi nelle classi sono gli stessi, cambia solo l'API del servizio di pagamento.
+Al checkout l'utente può pagare con PayPal, Revolut, P2P o Bonifico: i metodi nelle classi sono gli stessi, cambia solo l'API del servizio di pagamento, e qui entra in gioco il Template Method. Le opere hanno poi una loro "vita": nascono `DISPONIBILE`, passano per `IN_VALUTAZIONE` quando qualcuno sta tentando l'acquisto, e arrivano a `VENDUTO`; il pattern State gestisce questa progressione.
 
-**State** — Le opere hanno una vita: nascono `DISPONIBILE`, passano per `IN_VALUTAZIONE` quando qualcuno sta tentando l'acquisto, e arrivano a `VENDUTO`.
-
-**Command** — Ogni acquisto e ogni vendita viene incapsulata in un oggetto Command (`CompraCMD`, `VendeCMD`). Questo ci dà due cose gratis: uno storico completo delle transazioni e la possibilità di annullare un'operazione recente.
-
-**Observer** — Quando un acquisto va a buon fine, il servizio di pagamento lancia una notifica asincrona a tutti gli "osservatori" registrati: l'acquirente riceve la ricevuta via email, il venditore viene avvisato.
+Ogni acquisto e ogni vendita viene incapsulato in un oggetto Command (`CompraCMD`, `VendeCMD`), il che ci dà due cose: uno storico completo delle transazioni e la possibilità di annullare un'operazione recente. Infine, quando un acquisto va a buon fine, il servizio di pagamento lancia una notifica asincrona a tutti gli "osservatori" registrati tramite il pattern Observer: l'acquirente riceve la ricevuta via email, il venditore viene avvisato.
 
 ---
 
@@ -59,14 +36,13 @@ Per tenere il codice pulito, scalabile ed evolvibile abbiamo adottato alcuni Des
 
 ---
 
-## Setup e Avvio con Docker
+## Setup e avvio con Docker
 
-L'intera infrastruttura del progetto (Database MySQL, Server Keycloak e Backend Spring Boot) è containerizzata e gestita tramite Docker Compose. Non è necessario installare o avviare alcun servizio manualmente.
+L'intera infrastruttura (Database MySQL, Server Keycloak e Backend Spring Boot) è containerizzata e gestita tramite Docker Compose, quindi non serve installare o avviare nulla a mano.
 
-### 1. Variabili d'ambiente (File `.env`)
-Prima di avviare il progetto, assicurati di avere un file chiamato esattamente `.env` nella directory principale (root) del progetto, allo stesso livello del file `docker-compose.yml`.
+### 1. Variabili d'ambiente (file `.env`)
 
-Il file deve contenere queste variabili essenziali per il routing e la sicurezza:
+Prima di avviare il progetto, assicurati di avere un file chiamato esattamente `.env` nella directory principale del progetto, allo stesso livello del `docker-compose.yml`. Deve contenere queste variabili:
 
 ```env
 DB_CONTAINER_PORT=3306
@@ -81,45 +57,54 @@ KEYCLOAK_IMAGE=quay.io/keycloak/keycloak:latest
 KEYCLOAK_LOCAL_PORT=8180
 ```
 
-### 2. Attivazione del demone Docker (Solo Linux)
-Se stai utilizzando un ambiente Linux, assicurati che il motore di Docker sia in esecuzione in background prima di procedere:
+### 2. Attivazione del demone Docker (solo Linux)
+
+Se stai usando Linux, assicurati che il motore di Docker sia in esecuzione prima di procedere:
+
 ```bash
 sudo systemctl start docker
 ```
-*(Opzionale)* Per far sì che Docker si avvii automaticamente all'accensione del PC, esegui anche: `sudo systemctl enable docker`.
 
-### 3. Compilazione del Backend
-Docker non compila il codice Java, ma impacchetta l'eseguibile. Pertanto, **ogni volta che modifichi il codice sorgente Java**, devi generare un nuovo file `.jar` prima di avviare i container:
+Se vuoi che Docker parta automaticamente all'accensione del PC, puoi eseguire anche `sudo systemctl enable docker`.
+
+### 3. Compilazione del backend
+
+Docker non compila il codice Java, ma impacchetta l'eseguibile; quindi ogni volta che modifichi il sorgente devi generare un nuovo `.jar` prima di avviare i container:
 
 ```bash
 ./mvnw clean package -DskipTests
 ```
-> **Quando farlo?** Solo dopo aver fatto modifiche al codice tramite il tuo IDE (es. IntelliJ). Se devi solo accendere l'infrastruttura per testare le API e non hai toccato il codice, puoi saltare questo passaggio.
+
+Se devi solo accendere l'infrastruttura per testare le API e non hai toccato il codice, puoi saltare questo passaggio.
 
 ### 4. Avvio dell'ambiente
-Per far partire simultaneamente Database, Keycloak e Backend in background, esegui:
+
+Per far partire Database, Keycloak e Backend tutti insieme in background:
 
 ```bash
 sudo docker compose up -d --build
 ```
+
 Una volta avviato, i servizi saranno raggiungibili a questi indirizzi:
-- **Backend (API):** `http://localhost:8080`
-- **Keycloak (Console Admin):** `http://localhost:8180`
-- **MySQL:** `localhost:3307`
+- Backend (API): `http://localhost:8080`
+- Keycloak (Console Admin): `http://localhost:8180`
+- MySQL: `localhost:3307`
 
 ---
 
-## Configurazione di Keycloak (Solo al primo avvio)
-Dato che il container di Keycloak parte da zero, è necessario configurare il Realm, il Client e i Ruoli. Grazie ai volumi Docker, **questa operazione va fatta solo la prima volta**. Invece di installare Keycloak sul PC, eseguiremo lo script direttamente all'interno del container in esecuzione.
+## Configurazione di Keycloak (solo al primo avvio)
 
-**1. Entra nel terminale del container di Keycloak:**
+Il container di Keycloak parte da zero, quindi bisogna configurare il Realm, il Client e i Ruoli. Grazie ai volumi Docker l'operazione va fatta solo la prima volta; eseguiremo lo script direttamente dentro il container in esecuzione, senza installare nulla sul PC.
+
+Entra nel terminale del container:
+
 ```bash
 sudo docker exec -it app_keycloak bash
 cd /opt/keycloak/bin
 ```
 
-**2. Autenticati internamente:**
-*(Nota: internamente al container, Keycloak risponde sulla porta 8080)*
+Autenticati internamente (nota: dentro il container Keycloak risponde sulla porta 8080, non 8180):
+
 ```bash
 ./kcadm.sh config credentials \
   --server http://localhost:8080 \
@@ -128,7 +113,8 @@ cd /opt/keycloak/bin
   --password admin
 ```
 
-**3. Crea il realm e il client:**
+Crea il realm e il client:
+
 ```bash
 ./kcadm.sh create realms \
   -s realm=art-platform \
@@ -144,40 +130,24 @@ cd /opt/keycloak/bin
   -s 'webOrigins=["http://localhost:8080"]'
 ```
 
-**4. Crea i ruoli della piattaforma:**
+Crea i ruoli della piattaforma:
+
 ```bash
 ./kcadm.sh create roles -r art-platform -s name=USER
 ./kcadm.sh create roles -r art-platform -s name=USER_VERIFICATO
 ```
 
-**5. Imposta il Frontend URL del realm:**
-Nelle impostazioni generali del realm `art-platform`, imposta il campo **Frontend URL** al seguente valore:
-```
-http://keycloak:8080
-```
-Questo consente al backend, che gira all'interno della rete Docker, di raggiungere Keycloak usando il nome del container anziché `localhost`.
+Imposta il Frontend URL del realm: nelle impostazioni generali del realm `art-platform`, metti nel campo "Frontend URL" il valore `http://keycloak:8080`. Questo serve al backend, che gira dentro la rete Docker, per raggiungere Keycloak tramite il nome del container invece di `localhost`.
 
-*(Digita `exit` per uscire dal terminale del container e tornare al tuo PC).*
+Digita `exit` per uscire dal terminale del container.
 
-**6. Aggiungi le Web Origins al client (interfaccia grafica):**
+### Web origins per il frontend Angular
 
-Per consentire al frontend Angular (che gira su `http://localhost:4200`) di comunicare correttamente con Keycloak, è necessario aggiungere la sua origine alla lista delle **Web Origins** del client tramite la console di amministrazione:
-
-1. Apri il browser e vai su `http://localhost:8180/admin`
-2. Accedi con le credenziali admin (`admin` / `admin`)
-3. Nel menu laterale, seleziona il realm **art-platform**
-4. Vai su **Clients** e clicca su **art-platform-client**
-5. Nella scheda **Settings**, individua il campo **Web origins**
-6. Aggiungi la seguente voce (oltre a quella già presente `http://keycloak:8080`):
-   ```
-   http://localhost:4200
-   ```
-7. Salva cliccando su **Save**
-
-> Senza questa configurazione, le richieste provenienti dal frontend Angular verranno bloccate dal browser con un errore CORS.
+Per far comunicare il frontend Angular (che gira su `http://localhost:4200`) con Keycloak, devi aggiungere la sua origine alla lista delle Web Origins del client dall'interfaccia grafica. Apri `http://localhost:8180/admin`, accedi con le credenziali admin, seleziona il realm `art-platform`, vai su Clients e clicca su `art-platform-client`; nella scheda Settings trova il campo "Web origins" e aggiungi `http://localhost:4200` (oltre a quella già presente `http://keycloak:8080`). Salva. Senza questa configurazione le richieste dal frontend verranno bloccate dal browser con un errore CORS.
 
 ### Assegnare un ruolo a un utente
-Dopo che un utente si è registrato, puoi assegnargli un ruolo ripetendo l'accesso al container (`sudo docker exec -it app_keycloak bash`) ed eseguendo:
+
+Dopo che un utente si è registrato, puoi assegnargli un ruolo rientrando nel container (`sudo docker exec -it app_keycloak bash`) ed eseguendo:
 
 ```bash
 # Per un utente standard:
@@ -190,24 +160,21 @@ Dopo che un utente si è registrato, puoi assegnargli un ruolo ripetendo l'acces
 ---
 
 ## Spegnimento dell'ambiente
-Per fermare l'applicazione e liberare la memoria del sistema, posizionati nella cartella del progetto ed esegui:
+
+Per fermare l'applicazione e liberare la memoria, posizionati nella cartella del progetto ed esegui:
 
 ```bash
 sudo docker compose down
 ```
-> I dati del database e tutte le configurazioni di Keycloak sono salvati in **volumi permanenti** (`db_data` e `keycloak_data`) e non andranno persi allo spegnimento. Al prossimo `docker compose up -d`, la piattaforma sarà già pronta all'uso!
+
+I dati del database e le configurazioni di Keycloak sono salvati in volumi permanenti (`db_data` e `keycloak_data`) e non vanno persi allo spegnimento; al prossimo `docker compose up -d` la piattaforma sarà già pronta.
 
 ---
 
-## Risoluzione dei problemi (Troubleshooting)
+## Risoluzione dei problemi
 
-**Errore 500 (Internal Server Error) in fase di registrazione**
-Se chiamando l'endpoint `/api/utenti/registra` ricevi un errore 500, è molto probabile che il Backend non riesca a comunicare con Keycloak.
-Questo accade quasi sempre se:
-1. Hai dimenticato di eseguire lo script di configurazione iniziale di Keycloak descritto sopra (il realm `art-platform` non esiste).
-2. Le credenziali di Keycloak nel file `.env` non corrispondono a quelle inserite nel `docker-compose.yml`.
+Se chiamando l'endpoint `/api/utenti/registra` ricevi un errore 500, quasi certamente il backend non riesce a comunicare con Keycloak. Le cause più comuni sono due: hai dimenticato lo script di configurazione iniziale (il realm `art-platform` non esiste ancora), oppure le credenziali nel file `.env` non corrispondono a quelle nel `docker-compose.yml`. Per capire cosa sta bloccando esattamente il backend, leggi gli ultimi 100 log con la relativa stack trace:
 
-Per capire esattamente cosa sta bloccando il backend, leggi gli ultimi 100 log con la relativa *stack trace* usando il comando:
 ```bash
 sudo docker compose logs --tail=100 backend
 ```
