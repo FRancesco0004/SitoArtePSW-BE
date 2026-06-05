@@ -10,5 +10,5 @@ import java.util.List;
 public interface AutoreRepository extends JpaRepository<Autore, Integer> {
     List<Autore> findByNome(String nome);
     List<Autore> findByCognome(String cognome);
-    List<Autore> findByNomeAndCognome(String nome, String cognome);
+    List<Autore> findByNomeIgnoreCaseAndCognomeIgnoreCase(String nome, String cognome);
 }

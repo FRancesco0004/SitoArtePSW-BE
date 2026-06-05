@@ -33,5 +33,7 @@ public class VenditaRequest {
 
     private BigDecimal peso;
 
-    private Integer autoreId;
+    private String nomeAutore;
+
+    private String cognomeAutore;
 }
