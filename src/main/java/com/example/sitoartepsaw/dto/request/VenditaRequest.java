@@ -36,4 +36,6 @@ public class VenditaRequest {
     private String nomeAutore;
 
     private String cognomeAutore;
+
+    private String emailAutore;
 }

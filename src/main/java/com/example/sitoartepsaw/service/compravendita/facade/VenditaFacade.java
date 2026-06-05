@@ -5,6 +5,7 @@ import com.example.sitoartepsaw.dto.response.AzioneResponse;
 import com.example.sitoartepsaw.entity.Autore;
 import com.example.sitoartepsaw.entity.Oggetto;
 import com.example.sitoartepsaw.entity.Utente;
+import com.example.sitoartepsaw.entity.UtenteVerificato;
 import com.example.sitoartepsaw.repository.AutoreRepository;
 import com.example.sitoartepsaw.repository.OggettoRepository;
 import com.example.sitoartepsaw.repository.UtenteRepository;
@@ -54,8 +55,13 @@ public class VenditaFacade {
     }
 
     private Autore recuperaOCreaAutore(VenditaRequest request) {
+        String emailAutore = pulisci(request.getEmailAutore());
         String nomeAutore = pulisci(request.getNomeAutore());
         String cognomeAutore = pulisci(request.getCognomeAutore());
+
+        if (emailAutore != null) {
+            return recuperaOCreaAutoreVerificato(emailAutore);
+        }
 
         boolean nomePresente = nomeAutore != null;
         boolean cognomePresente = cognomeAutore != null;
@@ -80,6 +86,42 @@ public class VenditaFacade {
                     nuovoAutore.setCognome(cognomeAutore);
                     return autoreRepository.save(nuovoAutore);
                 });
+    }
+
+    private Autore recuperaOCreaAutoreVerificato(String emailAutore) {
+        UtenteVerificato utenteVerificato = utenteVerificatoRepository
+                .findByUtente_EmailIgnoreCase(emailAutore)
+                .orElseThrow(() -> new BadRequestException(
+                        "Nessun utente verificato trovato con email " + emailAutore
+                ));
+
+        return autoreRepository
+                .findByUtenteVerificato_Id(utenteVerificato.getId())
+                .orElseGet(() -> recuperaAutoreLiberoOcreaNuovo(utenteVerificato));
+    }
+
+    private Autore recuperaAutoreLiberoOcreaNuovo(UtenteVerificato utenteVerificato) {
+        String nome = utenteVerificato.getUtente().getNome();
+        String cognome = utenteVerificato.getUtente().getCognome();
+
+        Autore autoreLibero = autoreRepository
+                .findByNomeIgnoreCaseAndCognomeIgnoreCase(nome, cognome)
+                .stream()
+                .filter(autore -> autore.getUtenteVerificato() == null)
+                .findFirst()
+                .orElse(null);
+
+        if (autoreLibero != null) {
+            autoreLibero.setUtenteVerificato(utenteVerificato);
+            return autoreRepository.save(autoreLibero);
+        }
+
+        Autore nuovoAutore = new Autore();
+        nuovoAutore.setNome(nome);
+        nuovoAutore.setCognome(cognome);
+        nuovoAutore.setUtenteVerificato(utenteVerificato);
+
+        return autoreRepository.save(nuovoAutore);
     }
 
     private String pulisci(String value) {
